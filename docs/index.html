@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bot de Administração — Documentação</title>
+  <style>
+    :root {
+      --bg:       #1e2124;
+      --bg-card:  #2c2f33;
+      --bg-code:  #23272a;
+      --accent:   #5865f2;
+      --accent-h: #4752c4;
+      --green:    #57f287;
+      --yellow:   #fee75c;
+      --red:      #ed4245;
+      --text:     #dcddde;
+      --muted:    #99aab5;
+      --border:   #40444b;
+      --radius:   10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── SIDEBAR ── */
+    nav {
+      width: 260px;
+      min-width: 260px;
+      background: var(--bg-code);
+      padding: 24px 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      padding: 0 20px 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .nav-logo h1 { font-size: 16px; color: var(--accent); }
+    .nav-logo p  { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    nav a {
+      display: block;
+      padding: 8px 20px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      border-left: 3px solid transparent;
+      transition: all 0.15s;
+    }
+    nav a:hover, nav a.active {
+      color: var(--text);
+      border-left-color: var(--accent);
+      background: rgba(88,101,242,0.08);
+    }
+
+    .nav-group {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      padding: 16px 20px 4px;
+    }
+
+    /* ── MAIN ── */
+    main {
+      flex: 1;
+      padding: 40px 48px;
+      max-width: 900px;
+    }
+
+    section { margin-bottom: 64px; }
+
+    h2 {
+      font-size: 26px;
+      color: #fff;
+      margin-bottom: 8px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    h3 {
+      font-size: 18px;
+      color: #fff;
+      margin: 28px 0 12px;
+    }
+
+    p { color: var(--text); margin-bottom: 14px; }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, #23275a 0%, #1e2124 100%);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 36px 40px;
+      margin-bottom: 48px;
+    }
+    .hero h1 { font-size: 32px; color: #fff; margin-bottom: 8px; }
+    .hero p  { font-size: 16px; color: var(--muted); margin: 0; }
+
+    .badges { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+    .badge {
+      background: rgba(88,101,242,0.2);
+      border: 1px solid var(--accent);
+      color: #a5b4fc;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+    }
+
+    /* ── FEATURE GRID ── */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: border-color 0.2s;
+    }
+    .feature-card:hover { border-color: var(--accent); }
+    .feature-card .icon { font-size: 28px; margin-bottom: 10px; }
+    .feature-card h4  { font-size: 15px; color: #fff; margin-bottom: 6px; }
+    .feature-card p   { font-size: 13px; color: var(--muted); margin: 0; }
+
+    /* ── COMMAND TABLE ── */
+    .cmd-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+    .cmd-table th {
+      text-align: left;
+      padding: 10px 14px;
+      background: var(--bg-code);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .cmd-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .cmd-table tr:last-child td { border-bottom: none; }
+    .cmd-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    code {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      color: #a5b4fc;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-family: "Fira Code", "Consolas", monospace;
+      font-size: 13px;
+    }
+
+    pre {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      overflow-x: auto;
+      margin: 16px 0;
+    }
+    pre code {
+      background: none;
+      border: none;
+      color: #a5b4fc;
+      padding: 0;
+      font-size: 14px;
+    }
+
+    /* ── STEPS ── */
+    .steps { margin-top: 16px; }
+    .step {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      align-items: flex-start;
+    }
+    .step-num {
+      min-width: 36px;
+      height: 36px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+    .step-body h4 { color: #fff; margin-bottom: 4px; font-size: 15px; }
+    .step-body p  { color: var(--muted); font-size: 14px; margin: 0; }
+
+    /* ── TEST CHECKLIST ── */
+    .checklist { margin-top: 16px; }
+    .check-group {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .check-group summary {
+      padding: 14px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 15px;
+      user-select: none;
+      list-style: none;
+    }
+    .check-group summary::-webkit-details-marker { display: none; }
+    .check-group summary::after {
+      content: "▸";
+      margin-left: auto;
+      color: var(--muted);
+      transition: transform 0.2s;
+    }
+    .check-group[open] summary::after { transform: rotate(90deg); }
+    .check-group[open] summary { border-bottom: 1px solid var(--border); }
+
+    .check-body { padding: 16px 20px; }
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 14px;
+    }
+    .check-item:last-child { border-bottom: none; }
+    .check-item input[type=checkbox] {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      accent-color: var(--accent);
+      margin-top: 2px;
+      cursor: pointer;
+    }
+    .check-item label { cursor: pointer; color: var(--text); line-height: 1.5; }
+    .check-item label code { font-size: 12px; }
+
+    /* ── ALERT ── */
+    .alert {
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 14px;
+      border-left: 4px solid;
+    }
+    .alert-info    { background: rgba(88,101,242,0.12); border-color: var(--accent); }
+    .alert-success { background: rgba(87,242,135,0.1);  border-color: var(--green); }
+    .alert-warning { background: rgba(254,231,92,0.1);  border-color: var(--yellow); }
+    .alert-danger  { background: rgba(237,66,69,0.1);   border-color: var(--red); }
+    .alert strong  { display: block; margin-bottom: 4px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { display: none; }
+      main { padding: 24px 20px; }
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════ SIDEBAR ══ -->
+<nav>
+  <div class="nav-logo">
+    <h1>🤖 Admin Bot</h1>
+    <p>Documentação completa</p>
+  </div>
+
+  <span class="nav-group">Início</span>
+  <a href="#visao-geral">Visão geral</a>
+  <a href="#funcionalidades">Funcionalidades</a>
+
+  <span class="nav-group">Instalação</span>
+  <a href="#requisitos">Requisitos</a>
+  <a href="#instalacao">Instalação passo a passo</a>
+  <a href="#developer-portal">Developer Portal</a>
+
+  <span class="nav-group">Comandos</span>
+  <a href="#tickets">Tickets</a>
+  <a href="#moderacao">Moderação</a>
+  <a href="#logs">Logs do servidor</a>
+  <a href="#boas-vindas">Boas-vindas</a>
+  <a href="#cargos">Menu de cargos</a>
+  <a href="#automod">Auto-moderação</a>
+  <a href="#sorteios">Sorteios</a>
+  <a href="#enquetes">Enquetes</a>
+  <a href="#xp">XP e Níveis</a>
+  <a href="#tags">Tags</a>
+
+  <span class="nav-group">Testes</span>
+  <a href="#como-testar">Guia de testes</a>
+</nav>
+
+<!-- ══════════════════════════════════════════════ MAIN ══ -->
+<main>
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>🤖 Bot de Administração</h1>
+    <p>Um bot completo e profissional para gerenciar seu servidor Discord — tickets, moderação, XP, sorteios e muito mais.</p>
+    <div class="badges">
+      <span class="badge">Node.js 18+</span>
+      <span class="badge">discord.js v14</span>
+      <span class="badge">SQLite</span>
+      <span class="badge">Multi-servidor</span>
+      <span class="badge">Docker</span>
+    </div>
+  </div>
+
+  <!-- VISÃO GERAL -->
+  <section id="visao-geral">
+    <h2>O que é este bot?</h2>
+    <p>
+      Este é um bot de administração completo para Discord. Ele funciona em vários servidores ao mesmo tempo, cada um com suas próprias configurações separadas. Pensa nele como um "assistente digital" que cuida do seu servidor enquanto você não está olhando.
+    </p>
+    <p>
+      Tudo é configurado diretamente pelo Discord usando comandos <code>/barra</code> — não precisa editar nenhum arquivo de código para usar.
+    </p>
+  </section>
+
+  <!-- FUNCIONALIDADES -->
+  <section id="funcionalidades">
+    <h2>O que ele faz?</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="icon">🎫</div>
+        <h4>Sistema de Tickets</h4>
+        <p>Painel bonito onde membros abrem chamados. A equipe assume, responde e fecha com transcript automático.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🔨</div>
+        <h4>Moderação</h4>
+        <p>Avise, silencie, expulse ou bane membros com um comando. Tudo fica registrado no histórico do servidor.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">📋</div>
+        <h4>Logs Automáticos</h4>
+        <p>O bot registra tudo num canal: mensagens apagadas/editadas, quem entrou/saiu, bans, cargos alterados.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">👋</div>
+        <h4>Boas-vindas</h4>
+        <p>Mensagem personalizada quando alguém entra. Dá cargo automaticamente para quem chegar.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🏷️</div>
+        <h4>Menu de Cargos</h4>
+        <p>Painel com dropdown onde membros escolhem seus próprios cargos — sem precisar pedir para ninguém.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">😄</div>
+        <h4>Reaction Roles</h4>
+        <p>Reagiu com emoji = ganhou cargo. Removeu a reação = perdeu o cargo. Simples assim.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🛡️</div>
+        <h4>Auto-Moderação</h4>
+        <p>Bloqueia palavrões, spam, links e protege contra raids — sem precisar de moderador humano presente.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🎉</div>
+        <h4>Sorteios</h4>
+        <p>Cria sorteios com botão de participação. O bot sorteia automaticamente quando o tempo acaba.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">📊</div>
+        <h4>Enquetes</h4>
+        <p>Votações com barras de progresso em tempo real. O resultado aparece automaticamente no prazo.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">⭐</div>
+        <h4>XP e Níveis</h4>
+        <p>Membros ganham XP por conversar. Ao subir de nível, ganham cargos de recompensa automaticamente.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">💬</div>
+        <h4>Tags</h4>
+        <p>Crie atalhos de resposta. Membro digita <code>!ajuda</code> e o bot responde com o texto que você configurou.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- REQUISITOS -->
+  <section id="requisitos">
+    <h2>Requisitos</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Node.js 18 ou superior</h4>
+          <p>Baixe em <strong>nodejs.org</strong> e instale. Para verificar, abra o terminal e digite: <code>node --version</code></p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Uma conta no Discord Developer Portal</h4>
+          <p>Acesse <strong>discord.com/developers/applications</strong> com sua conta Discord normal e crie um novo aplicativo.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Um servidor Discord para testar</h4>
+          <p>Crie um servidor só para testes. Isso evita acidentes no servidor principal durante a configuração.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INSTALAÇÃO -->
+  <section id="instalacao">
+    <h2>Instalação passo a passo</h2>
+
+    <h3>Passo 1 — Instalar as dependências</h3>
+    <p>Abra o terminal na pasta do projeto e rode:</p>
+    <pre><code>npm install</code></pre>
+
+    <h3>Passo 2 — Criar o arquivo .env</h3>
+    <p>Copie o arquivo de exemplo:</p>
+    <pre><code>cp .env.example .env</code></pre>
+    <p>Abra o <code>.env</code> num editor de texto e preencha o <code>DISCORD_TOKEN</code> (explicado no próximo passo).</p>
+
+    <h3>Passo 3 — Iniciar o bot</h3>
+    <pre><code>npm start</code></pre>
+    <p>Se aparecer <em>"Conectado como NomeDoBot#0000"</em> no terminal, o bot está funcionando!</p>
+
+    <div class="alert alert-warning">
+      <strong>⚠️ Atenção</strong>
+      Nunca compartilhe o conteúdo do arquivo <code>.env</code> com ninguém — ele contém o token secreto do bot.
+    </div>
+  </section>
+
+  <!-- DEVELOPER PORTAL -->
+  <section id="developer-portal">
+    <h2>Configuração no Discord Developer Portal</h2>
+
+    <div class="alert alert-info">
+      <strong>ℹ️ Por que isso é necessário?</strong>
+      O Discord exige que o dono do bot ative manualmente certas "permissões especiais" (intents privilegiadas) para que o bot consiga ler mensagens e ver membros do servidor.
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Criar o aplicativo</h4>
+          <p>Acesse <strong>discord.com/developers/applications</strong> → clique em <strong>New Application</strong> → dê um nome.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Copiar o Token</h4>
+          <p>Vá em <strong>Bot</strong> no menu lateral → clique em <strong>Reset Token</strong> → copie o token e cole no <code>.env</code> no campo <code>DISCORD_TOKEN</code>.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Ativar as Intents Privilegiadas</h4>
+          <p>Ainda em <strong>Bot</strong>, role a página para baixo até <strong>Privileged Gateway Intents</strong> e ative:</p>
+          <ul style="margin-top:8px;margin-left:20px;color:var(--muted);font-size:14px;">
+            <li>✅ <strong>Server Members Intent</strong> — ver quem entra/sai do servidor</li>
+            <li>✅ <strong>Message Content Intent</strong> — ler o conteúdo das mensagens (necessário para auto-mod, XP e tags)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h4>Convidar o bot para seu servidor</h4>
+          <p>Vá em <strong>OAuth2 → URL Generator</strong>, marque os escopos <strong>bot</strong> e <strong>applications.commands</strong>. Em <strong>Bot Permissions</strong>, marque:</p>
+          <ul style="margin-top:8px;margin-left:20px;color:var(--muted);font-size:14px;columns:2;gap:20px;">
+            <li>Manage Roles</li>
+            <li>Kick Members</li>
+            <li>Ban Members</li>
+            <li>Moderate Members</li>
+            <li>Send Messages</li>
+            <li>Manage Messages</li>
+            <li>Read Message History</li>
+            <li>Embed Links</li>
+            <li>Add Reactions</li>
+            <li>View Channels</li>
+          </ul>
+          <p style="margin-top:8px;">Copie a URL gerada, abra no navegador e selecione o servidor de testes.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TICKETS -->
+  <section id="tickets">
+    <h2>🎫 Sistema de Tickets</h2>
+    <p>Cria um painel de atendimento onde membros abrem chamados. A equipe pode assumir, adicionar membros e fechar com transcript automático.</p>
+    <h3>Como configurar</h3>
+    <p>Use <code>/config painel</code> para abrir o painel visual e configurar categoria, canal de logs e cargos de suporte.</p>
+    <h3>Comandos</h3>
+    <table class="cmd-table">
+      <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>/ticket-painel</code></td><td>Envia o painel de abertura de tickets num canal</td></tr>
+        <tr><td><code>/ticket add @usuario</code></td><td>Adiciona um membro ao ticket atual</td></tr>
+        <tr><td><code>/ticket remove @usuario</code></td><td>Remove um membro do ticket</td></tr>
+        <tr><td><code>/ticket stats</code></td><td>Estatísticas de tickets do servidor</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- MODERAÇÃO -->
+  <section id="moderacao">
+    <h2>🔨 Moderação</h2>
+    <p>Ferramentas para a equipe punir membros. Toda ação gera um <strong>caso numerado</strong> que fica no histórico do servidor.</p>
+    <h3>Comandos</h3>
+    <table class="cmd-table">
+      <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>/mod warn @user [motivo]</code></td><td>Aplica um aviso. O membro recebe DM com o motivo.</td></tr>
+        <tr><td><code>/mod mute @user 10m [motivo]</code></td><td>Silencia por tempo. Formatos: <code>10m</code>, <code>1h</code>, <code>2d</code> (máx. 28d)</td></tr>
+        <tr><td><code>/mod kick @user [motivo]</code></td><td>Expulsa do servidor (pode voltar)</td></tr>
+        <tr><td><code>/mod ban @user [motivo]</code></td><td>Bane permanentemente</td></tr>
+        <tr><td><code>/mod historico @user</code></td><td>Lista todas as infrações de um usuário</td></tr>
+        <tr><td><code>/mod casos</code></td><td>Lista os 10 casos mais recentes do servidor</td></tr>
+        <tr><td><code>/mod remover caso:5</code></td><td>Inativa um caso pelo número</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- LOGS -->
+  <section id="logs">
+    <h2>📋 Logs do Servidor</h2>
+    <p>O bot registra automaticamente tudo que acontece num canal configurado. Você escolhe quais eventos monitorar.</p>
+    <h3>Como configurar</h3>
+    <p>Use <code>/config painel</code> → clique na tela <strong>Logs</strong> → selecione o canal de logs → ative os eventos desejados.</p>
+    <h3>Eventos disponíveis</h3>
+    <table class="cmd-table">
+      <thead><tr><th>Evento</th><th>Quando dispara</th></tr></thead>
+      <tbody>
+        <tr><td>Mensagem editada</td><td>Alguém edita uma mensagem (mostra o antes e depois)</td></tr>
+        <tr><td>Mensagem apagada</td><td>Alguém apaga uma mensagem</td></tr>
+        <tr><td>Membro entrou</td><td>Nova pessoa entra no servidor</td></tr>
+        <tr><td>Membro saiu</td><td>Alguém sai ou é expulso</td></tr>
+        <tr><td>Ban</td><td>Um membro é banido</td></tr>
+        <tr><td>Unban</td><td>Um ban é removido</td></tr>
+        <tr><td>Cargo alterado</td><td>Cargo adicionado ou removido de um membro</td></tr>
+        <tr><td>Apelido alterado</td><td>Apelido do servidor alterado</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- BOAS-VINDAS -->
+  <section id="boas-vindas">
+    <h2>👋 Boas-vindas</h2>
+    <p>Envia uma mensagem automática quando alguém entra ou sai do servidor. Também pode atribuir um cargo automaticamente.</p>
+    <h3>Como configurar</h3>
+    <p>Use <code>/config painel</code> → clique em <strong>Boas-vindas</strong> → configure canal, mensagem e cargo automático.</p>
+    <h3>Variáveis disponíveis na mensagem</h3>
+    <table class="cmd-table">
+      <thead><tr><th>Variável</th><th>Substitui por</th></tr></thead>
+      <tbody>
+        <tr><td><code>{usuario}</code></td><td>Menção do membro (ex: @Pedro)</td></tr>
+        <tr><td><code>{tag}</code></td><td>Nome de usuário completo (ex: Pedro#1234)</td></tr>
+        <tr><td><code>{servidor}</code></td><td>Nome do servidor</td></tr>
+        <tr><td><code>{membros}</code></td><td>Número total de membros</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Exemplo de mensagem:</strong> <code>Bem-vindo ao {servidor}, {usuario}! Você é o membro número {membros}. 🎉</code></p>
+  </section>
+
+  <!-- CARGOS -->
+  <section id="cargos">
+    <h2>🏷️ Menu de Cargos e Reaction Roles</h2>
+
+    <h3>Menu de Cargos (Dropdown)</h3>
+    <p>Cria um painel com um menu dropdown onde membros escolhem seus próprios cargos sem precisar pedir para ninguém.</p>
+    <table class="cmd-table">
+      <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>/cargo-menu criar #canal Título</code></td><td>Cria um novo menu de cargos no canal informado</td></tr>
+        <tr><td><code>/cargo-menu opcao-adicionar menu_id:1 cargo:@Membro</code></td><td>Adiciona uma opção ao menu</td></tr>
+        <tr><td><code>/cargo-menu opcao-remover menu_id:1 cargo:@Membro</code></td><td>Remove uma opção do menu</td></tr>
+        <tr><td><code>/cargo-menu remover menu_id:1</code></td><td>Apaga o menu</td></tr>
+        <tr><td><code>/cargo-menu lista</code></td><td>Lista todos os menus do servidor</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:28px;">Reaction Roles (Por Emoji)</h3>
+    <p>Associa um emoji de uma mensagem específica a um cargo. Reagir = ganhar cargo. Remover reação = perder cargo.</p>
+    <table class="cmd-table">
+      <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>/reaction-role adicionar #canal ID_MENSAGEM 👍 @Cargo</code></td><td>Cria reaction role</td></tr>
+        <tr><td><code>/reaction-role remover id:1</code></td><td>Remove reaction role pelo ID</td></tr>
+        <tr><td><code>/reaction-role lista</code></td><td>Lista todas as reaction roles</td></tr>
+      </tbody>
+    </table>
+    <div class="alert alert-info">
+      <strong>ℹ️ Como pegar o ID de uma mensagem</strong>
+      Ative o "Modo Desenvolvedor" no Discord (Configurações → Avançado → Modo Desenvolvedor), depois clique com o botão direito na mensagem e escolha "Copiar ID".
+    </div>
+  </section>
+
+  <!-- AUTO-MOD -->
+  <section id="automod">
+    <h2>🛡️ Auto-Moderação</h2>
+    <p>O bot monitora todas as mensagens e age automaticamente, sem precisar de moderador humano presente.</p>
+    <table class="cmd-table">
+      <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>/automod ver</code></td><td>Mostra todas as configurações atuais</td></tr>
+        <tr><td><code>/automod palavra-adicionar palavra:xingamento acao:mute</code></td><td>Adiciona palavra proibida. Ações: <code>delete</code>, <code>warn</code>, <code>mute</code></td></tr>
+        <tr><td><code>/automod palavra-remover palavra:xingamento</code></td><td>Remove palavra da lista</td></tr>
+        <tr><td><code>/automod palavras-lista</code></td><td>Mostra todas as palavras proibidas</td></tr>
+        <tr><td><code>/automod spam ativo:Sim mensagens:5 segundos:5 acao:mute</code></td><td>Ativa anti-spam: 5 mensagens em 5 segundos = mute</td></tr>
+        <tr><td><code>/automod mencoes limite:5</code></td><td>Apaga mensagens com mais de 5 @menções</td></tr>
+        <tr><td><code>/automod links ativo:Sim</code></td><td>Bloqueia links e convites do Discord</td></tr>
+        <tr><td><code>/automod raid ativo:Sim entradas:10 segundos:30</code></td><td>Alerta quando 10 pessoas entram em 30 segundos</td></tr>
+        <tr><td><code>/automod isentar-canal #geral</code></td><td>O bot ignora esse canal</td></tr>
+        <tr><td><code>/automod isentar-cargo @Moderador</code></td><td>O bot ignora membros com esse cargo</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- SORTEIOS -->
+  <section id="sorteios">
+    <h2>🎉 Sorteios</h2>
+    <p>Cria sorteios com um botão de participação. Quando o tempo acabar, o bot sorteia os vencedores automaticamente e anuncia no canal.</p>
+    <table class="cmd-table">
+      <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>/sorteio criar premio:Nitro duracao:1h</code></td><td>Cria sorteio de 1 hora com 1 vencedor</td></tr>
+        <tr><td><code>/sorteio criar premio:Nitro duracao:1d vencedores:3 canal:#sorteios</code></td><td>Sorteio com 3 vencedores num canal específico</td></tr>
+        <tr><td><code>/sorteio encerrar id:1</code></td><td>Encerra o sorteio agora mesmo</td></tr>
+        <tr><td><code>/sorteio reroll id:1 vencedores:1</code></td><td>Sorteia um novo vencedor (se o ganhador não aparecer)</td></tr>
+        <tr><td><code>/sorteio lista</code></td><td>Lista todos os sorteios ativos</td></tr>
+      </tbody>
+    </table>
+    <div class="alert alert-success">
+      <strong>✅ Duração suportada</strong>
+      Formatos: <code>10m</code> (10 minutos), <code>1h</code> (1 hora), <code>2d</code> (2 dias). Máximo: 30 dias.
+    </div>
+  </section>
+
+  <!-- ENQUETES -->
+  <section id="enquetes">
+    <h2>📊 Enquetes</h2>
+    <p>Cria votações com até 5 opções e botões clicáveis. O placar atualiza em tempo real e o resultado aparece automaticamente quando o prazo vence.</p>
+    <table class="cmd-table">
+      <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>/enquete criar pergunta:Qual cor? opcao1:Azul opcao2:Verde</code></td><td>Cria enquete sem prazo (encerra em 7 dias)</td></tr>
+        <tr><td><code>/enquete criar pergunta:... opcao1:A opcao2:B opcao3:C duracao:2h</code></td><td>Enquete com 3 opções e prazo de 2 horas</td></tr>
+        <tr><td><code>/enquete encerrar id:1</code></td><td>Encerra e publica resultado agora</td></tr>
+        <tr><td><code>/enquete lista</code></td><td>Lista enquetes abertas</td></tr>
+      </tbody>
+    </table>
+    <div class="alert alert-info">
+      <strong>ℹ️ Trocar voto</strong>
+      Membros podem trocar o voto clicando em outra opção. Clicar na mesma opção mostra aviso de "já votou".
+    </div>
+  </section>
+
+  <!-- XP -->
+  <section id="xp">
+    <h2>⭐ XP e Níveis</h2>
+    <p>Membros ganham XP por enviar mensagens (com cooldown para evitar spam). Ao subir de nível, recebem notificação e podem ganhar cargos de recompensa automaticamente.</p>
+    <h3>Fórmula de nível</h3>
+    <p>Nível = raiz quadrada de (XP ÷ 100). Na prática: nível 1 = 100 XP, nível 5 = 2.500 XP, nível 10 = 10.000 XP.</p>
+    <table class="cmd-table">
+      <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>/nivel</code></td><td>Vê seu próprio nível, XP e barra de progresso</td></tr>
+        <tr><td><code>/nivel usuario:@Pedro</code></td><td>Vê o nível de outro membro</td></tr>
+        <tr><td><code>/top</code></td><td>Ranking dos 10 mais ativos do servidor</td></tr>
+        <tr><td><code>/top pagina:2</code></td><td>Segunda página do ranking</td></tr>
+        <tr><td><code>/xp config ativar:Sim</code></td><td>Ativa o sistema de XP</td></tr>
+        <tr><td><code>/xp config ativar:Sim canal:#level-up xp_mensagem:20 cooldown:60</code></td><td>Configuração completa</td></tr>
+        <tr><td><code>/xp config</code></td><td>Mostra a configuração atual (sem parâmetros)</td></tr>
+        <tr><td><code>/xp reset usuario:@Pedro</code></td><td>Zera o XP de um membro</td></tr>
+        <tr><td><code>/xp recompensa-adicionar nivel:5 cargo:@Veterano</code></td><td>Cargo automático ao atingir nível 5</td></tr>
+        <tr><td><code>/xp recompensa-remover nivel:5</code></td><td>Remove a recompensa do nível 5</td></tr>
+        <tr><td><code>/xp recompensas</code></td><td>Lista todas as recompensas configuradas</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- TAGS -->
+  <section id="tags">
+    <h2>💬 Tags (Respostas Automáticas)</h2>
+    <p>Crie atalhos de texto. Quando alguém digita o prefixo + nome da tag no chat, o bot responde automaticamente com o conteúdo configurado.</p>
+    <p><strong>Exemplo:</strong> Admin cria a tag <code>ajuda</code>. Qualquer membro digita <code>!ajuda</code> no chat e o bot responde.</p>
+    <table class="cmd-table">
+      <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>/tag criar nome:ajuda conteudo:Leia as regras em #regras!</code></td><td>Cria a tag <code>!ajuda</code></td></tr>
+        <tr><td><code>/tag editar nome:ajuda conteudo:Novo texto aqui</code></td><td>Atualiza o conteúdo</td></tr>
+        <tr><td><code>/tag remover nome:ajuda</code></td><td>Apaga a tag</td></tr>
+        <tr><td><code>/tag lista</code></td><td>Lista todas as tags e quantas vezes foram usadas</td></tr>
+        <tr><td><code>/tag ver nome:ajuda</code></td><td>Mostra o conteúdo da tag</td></tr>
+        <tr><td><code>/tag prefixo prefixo:?</code></td><td>Muda o prefixo de <code>!</code> para <code>?</code></td></tr>
+      </tbody>
+    </table>
+    <div class="alert alert-warning">
+      <strong>⚠️ Segurança</strong>
+      O conteúdo das tags nunca consegue pingar <code>@everyone</code> ou cargos — isso é bloqueado automaticamente.
+    </div>
+  </section>
+
+  <!-- COMO TESTAR -->
+  <section id="como-testar">
+    <h2>✅ Guia completo de testes</h2>
+    <p>Marque cada item conforme for testando. Recomendamos ter <strong>duas contas Discord</strong> (a sua e uma conta de teste) para simular um membro comum.</p>
+
+    <div class="alert alert-info">
+      <strong>ℹ️ Antes de começar</strong>
+      Inicie o bot (<code>npm start</code>), convide-o para o servidor de testes e certifique-se que ele tem a role mais alta possível (acima das roles que vai gerenciar). Espere o terminal mostrar "Conectado como ...".
+    </div>
+
+    <div class="checklist">
+
+      <details class="check-group">
+        <summary>🔧 Configuração inicial</summary>
+        <div class="check-body">
+          <div class="check-item"><input type="checkbox" id="c0a"><label for="c0a">O bot aparece como online no servidor</label></div>
+          <div class="check-item"><input type="checkbox" id="c0b"><label for="c0b">Os comandos <code>/</code> aparecem ao digitar barra no chat</label></div>
+          <div class="check-item"><input type="checkbox" id="c0c"><label for="c0c">Use <code>/config painel</code> — o painel abre corretamente</label></div>
+        </div>
+      </details>
+
+      <details class="check-group">
+        <summary>🎫 Tickets</summary>
+        <div class="check-body">
+          <div class="check-item"><input type="checkbox" id="c1a"><label for="c1a">Configure categoria e cargo de suporte no <code>/config painel</code></label></div>
+          <div class="check-item"><input type="checkbox" id="c1b"><label for="c1b">Use <code>/ticket-painel</code> para enviar o painel num canal</label></div>
+          <div class="check-item"><input type="checkbox" id="c1c"><label for="c1c">Abra um ticket pela conta de teste — o canal de ticket é criado</label></div>
+          <div class="check-item"><input type="checkbox" id="c1d"><label for="c1d">Feche o ticket pelo botão — transcript é enviado</label></div>
+        </div>
+      </details>
+
+      <details class="check-group">
+        <summary>🔨 Moderação</summary>
+        <div class="check-body">
+          <div class="check-item"><input type="checkbox" id="c2a"><label for="c2a">Use <code>/mod warn @contaTeste motivo:Teste de aviso</code> → a conta recebe DM</label></div>
+          <div class="check-item"><input type="checkbox" id="c2b"><label for="c2b">Use <code>/mod mute @contaTeste 5m</code> → timeout aplicado no Discord</label></div>
+          <div class="check-item"><input type="checkbox" id="c2c"><label for="c2c">Use <code>/mod historico @contaTeste</code> → aparece o warn e o mute</label></div>
+          <div class="check-item"><input type="checkbox" id="c2d"><label for="c2d">Use <code>/mod casos</code> → lista os casos recentes</label></div>
+        </div>
+      </details>
+
+      <details class="check-group">
+        <summary>📋 Logs</summary>
+        <div class="check-body">
+          <div class="check-item"><input type="checkbox" id="c3a"><label for="c3a">Configure canal de logs no <code>/config painel</code> → <strong>Logs</strong></label></div>
+          <div class="check-item"><input type="checkbox" id="c3b"><label for="c3b">Ative o evento "Mensagem editada" e edite uma mensagem → aparece no log</label></div>
+          <div class="check-item"><input type="checkbox" id="c3c"><label for="c3c">Apague uma mensagem → aparece no log</label></div>
+          <div class="check-item"><input type="checkbox" id="c3d"><label for="c3d">Entre no servidor com a conta de teste → aparece no log</label></div>
+        </div>
+      </details>
+
+      <details class="check-group">
+        <summary>👋 Boas-vindas</summary>
+        <div class="check-body">
+          <div class="check-item"><input type="checkbox" id="c4a"><label for="c4a">Configure canal e mensagem no <code>/config painel</code> → <strong>Boas-vindas</strong>. Use a variável <code>{usuario}</code></label></div>
+          <div class="check-item"><input type="checkbox" id="c4b"><label for="c4b">Configure um cargo automático</label></div>
+          <div class="check-item"><input type="checkbox" id="c4c"><label for="c4c">Saia e entre no servidor com a conta de teste → mensagem aparece, cargo é atribuído</label></div>
+        </div>
+      </details>
+
+      <details class="check-group">
+        <summary>🏷️ Menu de Cargos</summary>
+        <div class="check-body">
+          <div class="check-item"><input type="checkbox" id="c5a"><label for="c5a">Crie 2 cargos de teste no servidor</label></div>
+          <div class="check-item"><input type="checkbox" id="c5b"><label for="c5b">Use <code>/cargo-menu criar canal:#escolha-cargos titulo:Escolha seu cargo</code></label></div>
+          <div class="check-item"><input type="checkbox" id="c5c"><label for="c5c">Use <code>/cargo-menu opcao-adicionar menu_id:1 cargo:@CargoTeste1</code></label></div>
+          <div class="check-item"><input type="checkbox" id="c5d"><label for="c5d">O bot envia o painel com dropdown automaticamente</label></div>
+          <div class="check-item"><input type="checkbox" id="c5e"><label for="c5e">Com a conta de teste, selecione o cargo → ele aparece no perfil</label></div>
+          <div class="check-item"><input type="checkbox" id="c5f"><label for="c5f">Desmarque o cargo no dropdown → ele some do perfil</label></div>
+        </div>
+      </details>
+
+      <details class="check-group">
+        <summary>😄 Reaction Roles</summary>
+        <div class="check-body">
+          <div class="check-item"><input type="checkbox" id="c6a"><label for="c6a">Envie uma mensagem qualquer num canal e copie o ID dela (Modo Desenvolvedor)</label></div>
+          <div class="check-item"><input type="checkbox" id="c6b"><label for="c6b">Use <code>/reaction-role adicionar canal:#canal mensagem_id:ID_AQUI emoji:👍 cargo:@CargoTeste</code></label></div>
+          <div class="check-item"><input type="checkbox" id="c6c"><label for="c6c">Com a conta de teste, reaja com 👍 → cargo atribuído</label></div>
+          <div class="check-item"><input type="checkbox" id="c6d"><label for="c6d">Remova a reação → cargo removido</label></div>
+        </div>
+      </details>
+
+      <details class="check-group">
+        <summary>🛡️ Auto-Moderação</summary>
+        <div class="check-body">
+          <div class="check-item"><input type="checkbox" id="c7a"><label for="c7a">Use <code>/automod palavra-adicionar palavra:xingamentoteste acao:warn</code></label></div>
+          <div class="check-item"><input type="checkbox" id="c7b"><label for="c7b">Com a conta de teste, envie uma mensagem contendo <em>xingamentoteste</em> → mensagem apagada, aviso criado</label></div>
+          <div class="check-item"><input type="checkbox" id="c7c"><label for="c7c">Use <code>/automod spam ativo:Sim mensagens:3 segundos:5 acao:warn</code></label></div>
+          <div class="check-item"><input type="checkbox" id="c7d"><label for="c7d">Com a conta de teste, envie 3 mensagens rapidamente → punição aplicada</label></div>
+          <div class="check-item"><input type="checkbox" id="c7e"><label for="c7e">Use <code>/automod links ativo:Sim</code> e envie um link → mensagem deletada</label></div>
+        </div>
+      </details>
+
+      <details class="check-group">
+        <summary>🎉 Sorteios</summary>
+        <div class="check-body">
+          <div class="check-item"><input type="checkbox" id="c8a"><label for="c8a">Use <code>/sorteio criar premio:Prêmio Teste duracao:1m</code></label></div>
+          <div class="check-item"><input type="checkbox" id="c8b"><label for="c8b">Com a conta de teste, clique em 🎉 Participar → contador atualiza</label></div>
+          <div class="check-item"><input type="checkbox" id="c8c"><label for="c8c">Clique de novo → aviso "já está participando"</label></div>
+          <div class="check-item"><input type="checkbox" id="c8d"><label for="c8d">Use <code>/sorteio encerrar id:1</code> → vencedor anunciado</label></div>
+          <div class="check-item"><input type="checkbox" id="c8e"><label for="c8e">Use <code>/sorteio reroll id:1</code> → novo vencedor anunciado</label></div>
+        </div>
+      </details>
+
+      <details class="check-group">
+        <summary>📊 Enquetes</summary>
+        <div class="check-body">
+          <div class="check-item"><input type="checkbox" id="c9a"><label for="c9a">Use <code>/enquete criar pergunta:Qual a melhor cor? opcao1:Azul opcao2:Verde duracao:2m</code></label></div>
+          <div class="check-item"><input type="checkbox" id="c9b"><label for="c9b">Clique em Azul → barra de progresso atualiza</label></div>
+          <div class="check-item"><input type="checkbox" id="c9c"><label for="c9c">Com a conta de teste, clique em Verde → barra atualiza separadamente</label></div>
+          <div class="check-item"><input type="checkbox" id="c9d"><label for="c9d">Clique em Azul de novo (já votou) → aviso "já votou nessa opção"</label></div>
+          <div class="check-item"><input type="checkbox" id="c9e"><label for="c9e">Use <code>/enquete encerrar id:1</code> → resultado final mostrado com 🏆</label></div>
+        </div>
+      </details>
+
+      <details class="check-group">
+        <summary>⭐ XP e Níveis</summary>
+        <div class="check-body">
+          <div class="check-item"><input type="checkbox" id="c10a"><label for="c10a">Use <code>/xp config ativar:Sim cooldown:5</code> (5s de cooldown para testar rápido)</label></div>
+          <div class="check-item"><input type="checkbox" id="c10b"><label for="c10b">Envie 10 mensagens com intervalos de 5 segundos</label></div>
+          <div class="check-item"><input type="checkbox" id="c10c"><label for="c10c">Use <code>/nivel</code> → mostra XP acumulado e barra de progresso</label></div>
+          <div class="check-item"><input type="checkbox" id="c10d"><label for="c10d">Use <code>/top</code> → apareça no ranking</label></div>
+          <div class="check-item"><input type="checkbox" id="c10e"><label for="c10e">Configure recompensa: <code>/xp recompensa-adicionar nivel:1 cargo:@CargoTeste</code></label></div>
+          <div class="check-item"><input type="checkbox" id="c10f"><label for="c10f">Continue mandando mensagens até subir para nível 1 → cargo atribuído automaticamente</label></div>
+          <div class="check-item"><input type="checkbox" id="c10g"><label for="c10g">Após os testes, volte o cooldown para <code>60</code> com <code>/xp config cooldown:60</code></label></div>
+        </div>
+      </details>
+
+      <details class="check-group">
+        <summary>💬 Tags</summary>
+        <div class="check-body">
+          <div class="check-item"><input type="checkbox" id="c11a"><label for="c11a">Use <code>/tag criar nome:oi conteudo:Olá! Seja bem-vindo!</code></label></div>
+          <div class="check-item"><input type="checkbox" id="c11b"><label for="c11b">Digite <code>!oi</code> no chat → o bot responde com "Olá! Seja bem-vindo!"</label></div>
+          <div class="check-item"><input type="checkbox" id="c11c"><label for="c11c">Use <code>/tag lista</code> → a tag aparece com contador de usos</label></div>
+          <div class="check-item"><input type="checkbox" id="c11d"><label for="c11d">Use <code>/tag prefixo prefixo:?</code> e teste com <code>?oi</code></label></div>
+          <div class="check-item"><input type="checkbox" id="c11e"><label for="c11e">Volte o prefixo para <code>!</code> com <code>/tag prefixo prefixo:!</code></label></div>
+        </div>
+      </details>
+
+    </div>
+
+    <div class="alert alert-success" style="margin-top:32px;">
+      <strong>🎉 Todos os testes marcados?</strong>
+      Parabéns! Seu bot está completamente funcional. Agora você pode convidar para servidores reais.
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // Highlight active nav link on scroll
+  const sections = document.querySelectorAll("section[id], div[id]");
+  const navLinks = document.querySelectorAll("nav a");
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        navLinks.forEach((a) => a.classList.remove("active"));
+        const active = document.querySelector(`nav a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add("active");
+      }
+    });
+  }, { threshold: 0.3 });
+
+  sections.forEach((s) => observer.observe(s));
+
+  // Persist checkboxes in localStorage
+  document.querySelectorAll(".check-item input[type=checkbox]").forEach((cb) => {
+    const key = "check_" + cb.id;
+    cb.checked = localStorage.getItem(key) === "1";
+    cb.addEventListener("change", () => {
+      localStorage.setItem(key, cb.checked ? "1" : "0");
+    });
+  });
+</script>
+
+</body>
+</html>

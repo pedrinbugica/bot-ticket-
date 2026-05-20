@@ -1,7 +1,7 @@
 {
-  "name": "bot-ticket",
-  "version": "1.0.0",
-  "description": "Bot Discord para atendimento com sistema de tickets",
+  "name": "discord-admin-bot",
+  "version": "2.0.0",
+  "description": "Bot profissional de administração para Discord — tickets, moderação, logs, boas-vindas, menus de cargo, auto-mod, sorteios, enquetes, XP/níveis e tags",
   "type": "module",
   "main": "src/index.js",
   "scripts": {
@@ -15,10 +15,17 @@
   "keywords": [
     "discord",
     "bot",
-    "ticket"
+    "tickets",
+    "moderation",
+    "leveling",
+    "giveaway",
+    "polls",
+    "automod",
+    "multi-guild"
   ],
   "license": "MIT",
   "dependencies": {
+    "better-sqlite3": "^12.10.0",
     "discord-api-types": "^0.38.40",
     "discord.js": "^14.26.4",
     "dotenv": "^17.4.2"

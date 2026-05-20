@@ -1,0 +1,20 @@
+[
+  {
+    "value": "suporte",
+    "label": "Suporte geral",
+    "description": "Dúvidas, bugs e ajuda geral",
+    "emoji": "🛟"
+  },
+  {
+    "value": "financeiro",
+    "label": "Financeiro",
+    "description": "Pagamentos, assinaturas e reembolsos",
+    "emoji": "💳"
+  },
+  {
+    "value": "denuncia",
+    "label": "Denúncia",
+    "description": "Reportar usuário ou conteúdo",
+    "emoji": "⚠️"
+  }
+]

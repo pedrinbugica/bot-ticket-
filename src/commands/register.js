@@ -1,39 +1,50 @@
-import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
-import { config } from "../config.js";
+import { buildCommandDefinitions } from "./definitions.js";
+import { env } from "../config/env.js";
 
-const commands = [
-  new SlashCommandBuilder()
-    .setName("ticket-painel")
-    .setDescription("Envia o painel para abrir tickets de atendimento")
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
-].map((c) => c.toJSON());
+const commands = buildCommandDefinitions();
 
-function explainMissingAccess() {
+function explainMissingAccess(guildId) {
   console.error(`
-[Discord 50001 — Missing Access] Não foi possível registrar comandos neste servidor.
+[Discord 50001 — Missing Access] Não foi possível registrar comandos${guildId ? ` no servidor ${guildId}` : ""}.
 
 Verifique:
-  1) GUILD_ID no .env é o ID do servidor ONDE O BOT ESTÁ (sem aspas, só números).
-  2) Reconvide o bot com escopos: bot + applications.commands
-     Portal → OAuth2 → URL Generator → escopos: bot, applications.commands
-  3) O bot precisa estar online na lista de membros desse servidor.
+  1) O bot está no servidor com escopos bot + applications.commands
+  2) Reconvide o bot se necessário (Portal → OAuth2 → URL Generator)
 `);
 }
 
-/**
- * Registra comandos slash no servidor (guild) para aparecerem rápido durante o desenvolvimento.
- */
-export async function registerCommands(rest, Routes, clientId) {
+export async function registerGlobalCommands(rest, Routes, clientId) {
   try {
-    await rest.put(
-      Routes.applicationGuildCommands(clientId, config.guildId),
-      { body: commands }
-    );
-    console.log("Comandos slash registrados no servidor.");
+    await rest.put(Routes.applicationCommands(clientId), { body: commands });
+    console.log("Comandos slash registrados globalmente.");
   } catch (err) {
-    if (err.code === 50001) {
-      explainMissingAccess();
-    }
+    if (err.code === 50001) explainMissingAccess();
     throw err;
+  }
+}
+
+export async function registerGuildCommands(rest, Routes, clientId, guildId) {
+  try {
+    await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
+      body: commands,
+    });
+    console.log(`Comandos registrados no servidor ${guildId}.`);
+  } catch (err) {
+    if (err.code === 50001) explainMissingAccess(guildId);
+    throw err;
+  }
+}
+
+export async function registerCommandsForAllGuilds(rest, Routes, client, guildIds) {
+  if (env.deployGlobal) {
+    await registerGlobalCommands(rest, Routes, client.user.id);
+    return;
+  }
+  const ids =
+    guildIds ??
+    [...client.guilds.cache.keys(), env.legacyGuildId].filter(Boolean);
+  const unique = [...new Set(ids)];
+  for (const guildId of unique) {
+    await registerGuildCommands(rest, Routes, client.user.id, guildId);
   }
 }
