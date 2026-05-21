@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guia do Bot de Administração Discord</title>
+  <style>
+    :root {
+      --bg: #0e1015;
+      --surface: #161b22;
+      --surface2: #1e2530;
+      --border: #30363d;
+      --accent: #5865f2;
+      --accent2: #57f287;
+      --accent3: #fee75c;
+      --accent4: #eb459e;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --red: #ed4245;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ── SIDEBAR ── */
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 260px;
+      min-width: 260px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 24px 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .sidebar-logo {
+      padding: 0 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sidebar-logo .bot-icon {
+      width: 40px; height: 40px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .sidebar-logo span { font-size: 15px; font-weight: 700; }
+    .sidebar-section { padding: 16px 20px 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+    .sidebar a {
+      display: block;
+      padding: 8px 20px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      border-radius: 0;
+      transition: all 0.15s;
+      border-left: 3px solid transparent;
+    }
+    .sidebar a:hover { color: var(--text); background: var(--surface2); border-left-color: var(--accent); }
+    .sidebar a.active { color: var(--accent); background: rgba(88,101,242,0.1); border-left-color: var(--accent); }
+
+    /* ── MAIN ── */
+    .main { flex: 1; padding: 40px 48px; max-width: 900px; }
+
+    h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+    h2 { font-size: 22px; font-weight: 700; margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 17px; font-weight: 600; margin: 28px 0 10px; }
+    p { color: var(--text-muted); margin-bottom: 12px; font-size: 15px; }
+    p strong { color: var(--text); }
+    ul, ol { color: var(--text-muted); padding-left: 20px; margin-bottom: 12px; font-size: 15px; }
+    li { margin-bottom: 6px; }
+    li strong { color: var(--text); }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(88,101,242,0.2), rgba(87,242,135,0.1));
+      border: 1px solid rgba(88,101,242,0.3);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin-bottom: 40px;
+    }
+    .hero p { font-size: 16px; margin-top: 8px; }
+    .badge-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+    .badge {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* ── COMMAND CARDS ── */
+    .cmd-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .cmd-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      background: var(--surface2);
+      cursor: pointer;
+      user-select: none;
+    }
+    .cmd-header:hover { background: rgba(88,101,242,0.1); }
+    .cmd-name {
+      font-family: "Courier New", monospace;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .cmd-desc { font-size: 14px; color: var(--text-muted); flex: 1; }
+    .cmd-perm {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .perm-admin { background: rgba(235,69,158,0.2); color: var(--accent4); }
+    .perm-any   { background: rgba(87,242,135,0.15); color: var(--accent2); }
+    .cmd-body { padding: 16px 18px; display: none; border-top: 1px solid var(--border); }
+    .cmd-body.open { display: block; }
+
+    .option-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
+    .option-table th { text-align: left; padding: 8px 10px; color: var(--text-muted); font-weight: 600; font-size: 12px; text-transform: uppercase; background: var(--bg); border-bottom: 1px solid var(--border); }
+    .option-table td { padding: 10px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .option-table tr:last-child td { border-bottom: none; }
+    .opt-name { font-family: "Courier New", monospace; color: var(--accent3); }
+    .opt-type { font-size: 12px; color: var(--text-muted); }
+    .opt-desc { color: var(--text-muted); }
+    .opt-req { font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+    .req-yes { background: rgba(237,66,69,0.2); color: var(--red); }
+    .req-no  { background: rgba(254,231,92,0.15); color: var(--accent3); }
+
+    /* ── STEPS ── */
+    .steps { counter-reset: step; }
+    .step {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      counter-increment: step;
+    }
+    .step-num {
+      min-width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 14px;
+      flex-shrink: 0;
+    }
+    .step-content h4 { font-size: 15px; margin-bottom: 4px; }
+    .step-content p { margin-bottom: 0; }
+
+    /* ── CODE ── */
+    code {
+      font-family: "Courier New", monospace;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 13px;
+      color: var(--accent3);
+    }
+    pre {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      overflow-x: auto;
+      margin: 12px 0;
+      font-size: 13px;
+      color: var(--text);
+      font-family: "Courier New", monospace;
+      line-height: 1.8;
+    }
+    pre .comment { color: var(--text-muted); }
+    pre .key { color: var(--accent); }
+    pre .val { color: var(--accent2); }
+
+    /* ── CALLOUTS ── */
+    .callout {
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin: 16px 0;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      font-size: 14px;
+    }
+    .callout-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .callout-body { color: var(--text-muted); }
+    .callout-body strong { color: var(--text); }
+    .callout.info { background: rgba(88,101,242,0.1); border: 1px solid rgba(88,101,242,0.3); }
+    .callout.tip  { background: rgba(87,242,135,0.08); border: 1px solid rgba(87,242,135,0.25); }
+    .callout.warn { background: rgba(254,231,92,0.08); border: 1px solid rgba(254,231,92,0.25); }
+
+    /* ── VARIABLE TABLE ── */
+    .var-table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 12px 0; }
+    .var-table th { background: var(--bg); padding: 8px 12px; text-align: left; color: var(--text-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+    .var-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .var-table tr:last-child td { border-bottom: none; }
+    .var-table code { background: rgba(254,231,92,0.1); border-color: rgba(254,231,92,0.2); }
+
+    /* ── MODULE GRID ── */
+    .module-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin: 16px 0; }
+    .module-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      font-size: 14px;
+    }
+    .module-item .mod-icon { font-size: 22px; margin-bottom: 6px; }
+    .module-item .mod-name { font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .module-item .mod-cmd { font-family: "Courier New", monospace; font-size: 12px; color: var(--accent); }
+
+    /* ── FOOTER ── */
+    .footer { margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 13px; text-align: center; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="bot-icon">🤖</div>
+      <span>Bot Admin Discord</span>
+    </div>
+
+    <div class="sidebar-section">Início</div>
+    <a href="#introducao" class="active">Introdução</a>
+    <a href="#modulos">Módulos disponíveis</a>
+
+    <div class="sidebar-section">Primeiros passos</div>
+    <a href="#discloud">Hospedar no DisCloud</a>
+    <a href="#envs">Variáveis de ambiente</a>
+
+    <div class="sidebar-section">Comandos</div>
+    <a href="#configurar">/ configurar</a>
+    <a href="#tickets">/ ticket & config</a>
+    <a href="#mod">/ mod</a>
+    <a href="#xp">/ xp & nivel & top</a>
+    <a href="#automod">/ automod</a>
+    <a href="#sorteio">/ sorteio</a>
+    <a href="#enquete">/ enquete</a>
+    <a href="#cargos">/ cargo-menu & reaction-role</a>
+    <a href="#tags">/ tag</a>
+
+    <div class="sidebar-section">Ajuda</div>
+    <a href="#faq">Perguntas frequentes</a>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- HERO -->
+    <div id="introducao" class="hero">
+      <h1>🤖 Bot de Administração Discord</h1>
+      <p>Guia completo para configurar e usar o bot no seu servidor. Tudo explicado de forma simples!</p>
+      <div class="badge-row">
+        <span class="badge">v2.0.0</span>
+        <span class="badge">discord.js v14</span>
+        <span class="badge">Multi-servidor</span>
+        <span class="badge">SQLite</span>
+        <span class="badge">DisCloud</span>
+      </div>
+    </div>
+
+    <p>Este bot funciona em <strong>vários servidores ao mesmo tempo</strong>. Cada servidor tem suas próprias configurações — o dono de cada servidor pode personalizar tudo através dos comandos abaixo, sem precisar falar com o dono do bot.</p>
+
+    <!-- MÓDULOS -->
+    <h2 id="modulos">📦 Módulos disponíveis</h2>
+    <p>O bot possui 10 sistemas independentes que você pode usar no seu servidor:</p>
+    <div class="module-grid">
+      <div class="module-item"><div class="mod-icon">🎫</div><div class="mod-name">Tickets</div><div class="mod-cmd">/ticket · /config</div></div>
+      <div class="module-item"><div class="mod-icon">🔨</div><div class="mod-name">Moderação</div><div class="mod-cmd">/mod</div></div>
+      <div class="module-item"><div class="mod-icon">📋</div><div class="mod-name">Logs</div><div class="mod-cmd">/configurar logs</div></div>
+      <div class="module-item"><div class="mod-icon">👋</div><div class="mod-name">Boas-vindas</div><div class="mod-cmd">/configurar boas-vindas</div></div>
+      <div class="module-item"><div class="mod-icon">🏷️</div><div class="mod-name">Cargos</div><div class="mod-cmd">/cargo-menu · /reaction-role</div></div>
+      <div class="module-item"><div class="mod-icon">🛡️</div><div class="mod-name">Auto-mod</div><div class="mod-cmd">/automod</div></div>
+      <div class="module-item"><div class="mod-icon">🎉</div><div class="mod-name">Sorteios</div><div class="mod-cmd">/sorteio</div></div>
+      <div class="module-item"><div class="mod-icon">📊</div><div class="mod-name">Enquetes</div><div class="mod-cmd">/enquete</div></div>
+      <div class="module-item"><div class="mod-icon">⭐</div><div class="mod-name">XP & Níveis</div><div class="mod-cmd">/xp · /nivel · /top</div></div>
+      <div class="module-item"><div class="mod-icon">🔖</div><div class="mod-name">Tags</div><div class="mod-cmd">/tag</div></div>
+    </div>
+
+    <!-- DISCLOUD -->
+    <h2 id="discloud">☁️ Hospedar no DisCloud</h2>
+    <p>O DisCloud é um serviço gratuito para manter o bot online 24h por dia. Siga estes passos:</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>Criar conta no DisCloud</h4>
+          <p>Acesse <strong>discloud.app</strong>, faça login com a sua conta do Discord e confirme o e-mail.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>Compactar o projeto em .zip</h4>
+          <p>Selecione todos os arquivos do projeto <strong>exceto</strong> a pasta <code>node_modules</code> e a pasta <code>.git</code>. Compacte em um arquivo <code>.zip</code>.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h4>Fazer upload no DisCloud</h4>
+          <p>No painel do DisCloud, clique em <strong>"Add App"</strong>, selecione o tipo <strong>Bot</strong>, e faça o upload do <code>.zip</code>. O DisCloud instala as dependências automaticamente.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h4>Configurar as variáveis de ambiente</h4>
+          <p>No painel do app criado, clique em <strong>"Envs"</strong> e adicione as variáveis (veja a seção abaixo). Depois clique em <strong>"Start"</strong>.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <div class="callout-icon">💡</div>
+      <div class="callout-body">O arquivo <code>discloud.config</code> já está incluído no projeto com as configurações corretas — você não precisa criar nem editar esse arquivo.</div>
+    </div>
+
+    <!-- ENVS -->
+    <h2 id="envs">🔑 Variáveis de ambiente</h2>
+    <p>Estas são as variáveis que você precisa configurar no painel do DisCloud (aba <strong>Envs</strong>):</p>
+
+    <table class="var-table">
+      <thead><tr><th>Variável</th><th>Obrigatória?</th><th>O que é</th></tr></thead>
+      <tbody>
+        <tr><td><code>DISCORD_TOKEN</code></td><td>✅ Sim</td><td>Token secreto do bot. Pegar em discord.com/developers → seu app → Bot → "Reset Token".</td></tr>
+        <tr><td><code>DEPLOY_GLOBAL</code></td><td>❌ Não</td><td>Use <code>true</code> para registrar comandos globalmente (demora ~1h) ou <code>false</code> para registrar só nos servidores onde o bot está (imediato). Padrão: <code>false</code>.</td></tr>
+        <tr><td><code>DATABASE_PATH</code></td><td>❌ Não</td><td>Caminho do banco de dados. Padrão já configurado: <code>data/bot-ticket.db</code>.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <div class="callout-icon">ℹ️</div>
+      <div class="callout-body"><strong>As configurações de cada servidor</strong> (canais, cargos, mensagens) são feitas pelos admins de cada servidor diretamente pelo Discord, usando o comando <code>/configurar</code>. Não precisam ir no .env.</div>
+    </div>
+
+    <!-- /CONFIGURAR -->
+    <h2 id="configurar">⚙️ Comando /configurar</h2>
+    <p>Este é o comando principal para os admins de cada servidor configurarem o bot. Só funciona para quem tem a permissão <strong>"Gerenciar servidor"</strong> no Discord.</p>
+
+    <div class="callout warn">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-body">Pense neste comando como o <strong>painel de controle</strong> do bot para o seu servidor. Cada servidor configura o seu próprio — as configurações de um servidor nunca afetam os outros.</div>
+    </div>
+
+    <!-- /configurar boas-vindas -->
+    <div class="cmd-card">
+      <div class="cmd-header" onclick="toggle(this)">
+        <span class="cmd-name">/configurar boas-vindas</span>
+        <span class="cmd-desc">Configura mensagens de entrada e saída de membros</span>
+        <span class="cmd-perm perm-admin">🔒 Gerenciar servidor</span>
+      </div>
+      <div class="cmd-body">
+        <p>Configura o que acontece quando alguém <strong>entra ou sai</strong> do servidor. Todos os campos são opcionais — você pode passar apenas os que quiser alterar.</p>
+        <table class="option-table">
+          <thead><tr><th>Opção</th><th>Tipo</th><th>Obrigatório</th><th>Descrição</th></tr></thead>
+          <tbody>
+            <tr><td class="opt-name">canal</td><td class="opt-type">#canal</td><td><span class="opt-req req-no">Opcional</span></td><td class="opt-desc">Canal onde aparece a mensagem de boas-vindas quando alguém entra.</td></tr>
+            <tr><td class="opt-name">mensagem</td><td class="opt-type">texto</td><td><span class="opt-req req-no">Opcional</span></td><td class="opt-desc">Texto da boas-vindas. Variáveis: <code>{usuario}</code>, <code>{servidor}</code>, <code>{membros}</code>.</td></tr>
+            <tr><td class="opt-name">canal-despedida</td><td class="opt-type">#canal</td><td><span class="opt-req req-no">Opcional</span></td><td class="opt-desc">Canal onde aparece a mensagem quando alguém sai do servidor.</td></tr>
+            <tr><td class="opt-name">mensagem-despedida</td><td class="opt-type">texto</td><td><span class="opt-req req-no">Opcional</span></td><td class="opt-desc">Texto de despedida. Variáveis: <code>{tag}</code>, <code>{servidor}</code>, <code>{membros}</code>.</td></tr>
+            <tr><td class="opt-name">dm</td><td class="opt-type">texto</td><td><span class="opt-req req-no">Opcional</span></td><td class="opt-desc">Mensagem enviada por DM privada ao novo membro quando ele entra.</td></tr>
+            <tr><td class="opt-name">auto-cargo</td><td class="opt-type">@cargo</td><td><span class="opt-req req-no">Opcional</span></td><td class="opt-desc">Cargo dado automaticamente a todo novo membro ao entrar no servidor.</td></tr>
+          </tbody>
+        </table>
+
+        <h4 style="margin-top:16px">Variáveis disponíveis nas mensagens:</h4>
+        <table class="var-table" style="margin-top:8px">
+          <thead><tr><th>Variável</th><th>O que aparece</th><th>Exemplo</th></tr></thead>
+          <tbody>
+            <tr><td><code>{usuario}</code></td><td>Menciona o usuário</td><td>@Pedro</td></tr>
+            <tr><td><code>{tag}</code></td><td>Nome#discriminator do usuário</td><td>Pedro#1234</td></tr>
+            <tr><td><code>{servidor}</code></td><td>Nome do servidor</td><td>Meu Servidor</td></tr>
+            <tr><td><code>{membros}</code></td><td>Total de membros atual</td><td>1.253</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout tip" style="margin-top:16px">
+          <div class="callout-icon">💡</div>
+          <div class="callout-body"><strong>Exemplo de uso:</strong><br>
+          <code>/configurar boas-vindas canal:#geral mensagem:Olá {usuario}, bem-vindo ao {servidor}! 🎉</code></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- /configurar logs -->
+    <div class="cmd-card">
+      <div class="cmd-header" onclick="toggle(this)">
+        <span class="cmd-name">/configurar logs</span>
+        <span class="cmd-desc">Define o canal e os eventos registrados no log do servidor</span>
+        <span class="cmd-perm perm-admin">🔒 Gerenciar servidor</span>
+      </div>
+      <div class="cmd-body">
+        <p>Configura o <strong>canal de logs</strong> — um canal de texto onde o bot registra automaticamente o que acontece no servidor (mensagens apagadas, banimentos, etc.).</p>
+        <table class="option-table">
+          <thead><tr><th>Opção</th><th>Tipo</th><th>Obrigatório</th><th>Descrição</th></tr></thead>
+          <tbody>
+            <tr><td class="opt-name">canal</td><td class="opt-type">#canal</td><td><span class="opt-req req-no">Opcional</span></td><td class="opt-desc">Canal onde os logs serão enviados. Normalmente um canal privado só da equipe.</td></tr>
+            <tr><td class="opt-name">mensagem-editada</td><td class="opt-type">sim/não</td><td><span class="opt-req req-no">Opcional</span></td><td class="opt-desc">Registrar quando alguém edita uma mensagem.</td></tr>
+            <tr><td class="opt-name">mensagem-apagada</td><td class="opt-type">sim/não</td><td><span class="opt-req req-no">Opcional</span></td><td class="opt-desc">Registrar quando uma mensagem é apagada.</td></tr>
+            <tr><td class="opt-name">membro-entrou</td><td class="opt-type">sim/não</td><td><span class="opt-req req-no">Opcional</span></td><td class="opt-desc">Registrar entrada de novos membros.</td></tr>
+            <tr><td class="opt-name">membro-saiu</td><td class="opt-type">sim/não</td><td><span class="opt-req req-no">Opcional</span></td><td class="opt-desc">Registrar saída de membros.</td></tr>
+            <tr><td class="opt-name">membro-banido</td><td class="opt-type">sim/não</td><td><span class="opt-req req-no">Opcional</span></td><td class="opt-desc">Registrar banimentos.</td></tr>
+            <tr><td class="opt-name">membro-desbanido</td><td class="opt-type">sim/não</td><td><span class="opt-req req-no">Opcional</span></td><td class="opt-desc">Registrar desbanimentos.</td></tr>
+            <tr><td class="opt-name">cargo-alterado</td><td class="opt-type">sim/não</td><td><span class="opt-req req-no">Opcional</span></td><td class="opt-desc">Registrar quando os cargos de um membro são alterados.</td></tr>
+            <tr><td class="opt-name">apelido-alterado</td><td class="opt-type">sim/não</td><td><span class="opt-req req-no">Opcional</span></td><td class="opt-desc">Registrar quando alguém muda de apelido no servidor.</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout tip" style="margin-top:16px">
+          <div class="callout-icon">💡</div>
+          <div class="callout-body"><strong>Exemplo de configuração inicial:</strong><br>
+          <code>/configurar logs canal:#logs-do-bot membro-banido:sim mensagem-apagada:sim</code></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- /configurar ver -->
+    <div class="cmd-card">
+      <div class="cmd-header" onclick="toggle(this)">
+        <span class="cmd-name">/configurar ver</span>
+        <span class="cmd-desc">Mostra a configuração atual de boas-vindas e logs</span>
+        <span class="cmd-perm perm-any">✅ Qualquer membro</span>
+      </div>
+      <div class="cmd-body">
+        <p>Exibe um resumo de tudo que está configurado no servidor: canal de boas-vindas, mensagens, canal de logs e quais eventos estão ativos. Só você pode ver a resposta.</p>
+      </div>
+    </div>
+
+    <!-- /ticket & /config -->
+    <h2 id="tickets">🎫 Sistema de Tickets</h2>
+    <p>O sistema de tickets cria canais privados de atendimento quando um membro clica em um botão. Ideal para suporte, denúncias ou relatórios.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-header" onclick="toggle(this)">
+        <span class="cmd-name">/config painel</span>
+        <span class="cmd-desc">Abre o painel visual de configuração de tickets</span>
+        <span class="cmd-perm perm-admin">🔒 Admin</span>
+      </div>
+      <div class="cmd-body">
+        <p>Abre um menu interativo para configurar todos os detalhes dos tickets do servidor: categoria, canal de log, cargos de suporte, cores, título, mensagem de regras, etc.</p>
+        <div class="callout info">
+          <div class="callout-icon">ℹ️</div>
+          <div class="callout-body">Use este comando primeiro para configurar o sistema. Depois use <code>/ticket-painel</code> para enviar o botão de abertura num canal público.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="cmd-header" onclick="toggle(this)">
+        <span class="cmd-name">/ticket-painel</span>
+        <span class="cmd-desc">Envia o painel de abertura de tickets no canal atual</span>
+        <span class="cmd-perm perm-admin">🔒 Admin</span>
+      </div>
+      <div class="cmd-body">
+        <p>Envia um embed bonito com um botão para os membros abrirem tickets. Use este comando no canal público onde você quer que os membros peçam suporte.</p>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="cmd-header" onclick="toggle(this)">
+        <span class="cmd-name">/ticket add / remove / stats</span>
+        <span class="cmd-desc">Ações dentro de um ticket aberto</span>
+        <span class="cmd-perm perm-any">✅ Membros da equipe</span>
+      </div>
+      <div class="cmd-body">
+        <ul>
+          <li><strong>/ticket add @usuario</strong> — Adiciona um membro ao ticket atual</li>
+          <li><strong>/ticket remove @usuario</strong> — Remove um membro do ticket</li>
+          <li><strong>/ticket stats</strong> — Mostra estatísticas de tickets do servidor</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- /mod -->
+    <h2 id="mod">🔨 Moderação</h2>
+    <p>Ferramentas para punir membros que violam as regras. Todas as ações ficam salvas no histórico do servidor.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-header" onclick="toggle(this)">
+        <span class="cmd-name">/mod warn / mute / kick / ban</span>
+        <span class="cmd-desc">Aplicar punições a membros</span>
+        <span class="cmd-perm perm-admin">🔒 Moderar membros</span>
+      </div>
+      <div class="cmd-body">
+        <ul>
+          <li><strong>/mod warn @usuario motivo</strong> — Aplica um aviso (fica no histórico)</li>
+          <li><strong>/mod mute @usuario duracao</strong> — Silencia por tempo definido. Exemplos de duração: <code>10m</code>, <code>1h</code>, <code>2d</code> (máx. 28 dias)</li>
+          <li><strong>/mod kick @usuario motivo</strong> — Expulsa o membro (pode voltar)</li>
+          <li><strong>/mod ban @usuario motivo</strong> — Bane o membro permanentemente</li>
+          <li><strong>/mod historico @usuario</strong> — Ver todos os casos de um membro</li>
+          <li><strong>/mod casos</strong> — Listar casos recentes do servidor</li>
+          <li><strong>/mod remover caso:123</strong> — Inativar um caso pelo número</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- /xp -->
+    <h2 id="xp">⭐ XP e Níveis</h2>
+    <p>Sistema de gamificação: membros ganham XP ao enviar mensagens e sobem de nível, podendo ganhar cargos como recompensa.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-header" onclick="toggle(this)">
+        <span class="cmd-name">/nivel / /top / /xp</span>
+        <span class="cmd-desc">Ver e gerenciar o sistema de XP</span>
+        <span class="cmd-perm perm-any">✅ Qualquer membro</span>
+      </div>
+      <div class="cmd-body">
+        <ul>
+          <li><strong>/nivel</strong> — Ver seu nível e XP atual (ou de outro membro)</li>
+          <li><strong>/top</strong> — Ranking de XP do servidor</li>
+          <li><strong>/xp config</strong> — Configurar o sistema: ativar/desativar, canal de notificação, XP por mensagem, cooldown</li>
+          <li><strong>/xp recompensa-adicionar nivel:5 cargo:@Membro</strong> — Dar cargo automaticamente ao atingir um nível</li>
+          <li><strong>/xp recompensa-remover nivel:5</strong> — Remover recompensa de um nível</li>
+          <li><strong>/xp recompensas</strong> — Listar todas as recompensas configuradas</li>
+          <li><strong>/xp reset @usuario</strong> — Zerar o XP de um membro (admin)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- /automod -->
+    <h2 id="automod">🛡️ Auto-Moderação</h2>
+    <p>O bot pode agir automaticamente contra spam, palavrões e links maliciosos sem precisar de um moderador online.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-header" onclick="toggle(this)">
+        <span class="cmd-name">/automod</span>
+        <span class="cmd-desc">Configurar regras automáticas de moderação</span>
+        <span class="cmd-perm perm-admin">🔒 Gerenciar servidor</span>
+      </div>
+      <div class="cmd-body">
+        <ul>
+          <li><strong>/automod ver</strong> — Exibir configuração atual</li>
+          <li><strong>/automod spam ativo:sim mensagens:5 segundos:10</strong> — Punir quem mandar 5+ msgs em 10s</li>
+          <li><strong>/automod links ativo:sim</strong> — Bloquear links e convites do Discord</li>
+          <li><strong>/automod mencoes limite:5</strong> — Bloquear mensagens com mais de 5 menções</li>
+          <li><strong>/automod raid ativo:sim entradas:10 segundos:30</strong> — Alertar se 10 membros entrarem em 30s</li>
+          <li><strong>/automod palavra-adicionar palavra:xingamento acao:mute</strong> — Bloquear palavra específica</li>
+          <li><strong>/automod isentar-canal #canal</strong> — Canal onde o auto-mod não age</li>
+          <li><strong>/automod isentar-cargo @cargo</strong> — Cargo que é ignorado pelo auto-mod</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- /sorteio -->
+    <h2 id="sorteio">🎉 Sorteios</h2>
+
+    <div class="cmd-card">
+      <div class="cmd-header" onclick="toggle(this)">
+        <span class="cmd-name">/sorteio</span>
+        <span class="cmd-desc">Criar e gerenciar sorteios com botão de participação</span>
+        <span class="cmd-perm perm-admin">🔒 Gerenciar servidor</span>
+      </div>
+      <div class="cmd-body">
+        <ul>
+          <li><strong>/sorteio criar premio:"Nitro" duracao:2d vencedores:1</strong> — Criar sorteio com duração e número de vencedores</li>
+          <li><strong>/sorteio encerrar id:1</strong> — Encerrar manualmente e anunciar vencedores</li>
+          <li><strong>/sorteio reroll id:1</strong> — Sortear novos vencedores para um sorteio encerrado</li>
+          <li><strong>/sorteio lista</strong> — Ver todos os sorteios ativos</li>
+        </ul>
+        <p>Duração aceita: <code>10m</code>, <code>1h</code>, <code>12h</code>, <code>2d</code> (máximo 30 dias)</p>
+      </div>
+    </div>
+
+    <!-- /enquete -->
+    <h2 id="enquete">📊 Enquetes</h2>
+
+    <div class="cmd-card">
+      <div class="cmd-header" onclick="toggle(this)">
+        <span class="cmd-name">/enquete</span>
+        <span class="cmd-desc">Criar votações com até 5 opções e barra de progresso</span>
+        <span class="cmd-perm perm-admin">🔒 Gerenciar servidor</span>
+      </div>
+      <div class="cmd-body">
+        <ul>
+          <li><strong>/enquete criar pergunta:"Qual dia?" opcao1:"Sábado" opcao2:"Domingo"</strong> — Criar enquete</li>
+          <li><strong>/enquete encerrar id:1</strong> — Encerrar e exibir resultado final</li>
+          <li><strong>/enquete lista</strong> — Ver enquetes ativas</li>
+        </ul>
+        <p>Membros podem trocar o voto a qualquer momento antes do encerramento.</p>
+      </div>
+    </div>
+
+    <!-- /cargos -->
+    <h2 id="cargos">🏷️ Menus de Cargo & Reaction Roles</h2>
+
+    <div class="cmd-card">
+      <div class="cmd-header" onclick="toggle(this)">
+        <span class="cmd-name">/cargo-menu</span>
+        <span class="cmd-desc">Menu dropdown para membros escolherem seus próprios cargos</span>
+        <span class="cmd-perm perm-admin">🔒 Gerenciar servidor</span>
+      </div>
+      <div class="cmd-body">
+        <ul>
+          <li><strong>/cargo-menu criar canal:#cargos titulo:"Escolha seu cargo"</strong> — Criar menu</li>
+          <li><strong>/cargo-menu opcao-adicionar menu_id:1 cargo:@Jogador label:"Jogador"</strong> — Adicionar opção</li>
+          <li><strong>/cargo-menu opcao-remover menu_id:1 cargo:@Jogador</strong> — Remover opção</li>
+          <li><strong>/cargo-menu lista</strong> — Ver todos os menus</li>
+          <li><strong>/cargo-menu remover menu_id:1</strong> — Apagar um menu</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="cmd-header" onclick="toggle(this)">
+        <span class="cmd-name">/reaction-role</span>
+        <span class="cmd-desc">Atribuir cargos por reação de emoji em mensagens</span>
+        <span class="cmd-perm perm-admin">🔒 Gerenciar servidor</span>
+      </div>
+      <div class="cmd-body">
+        <ul>
+          <li><strong>/reaction-role adicionar canal:#regras mensagem_id:123 emoji:✅ cargo:@Membro</strong> — Associar emoji a cargo</li>
+          <li><strong>/reaction-role remover id:1</strong> — Remover uma reaction role</li>
+          <li><strong>/reaction-role lista</strong> — Ver todas as reaction roles</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- /tag -->
+    <h2 id="tags">🔖 Tags</h2>
+    <p>Respostas automáticas ativadas por prefixo no chat. Digite <code>!ajuda</code> e o bot responde automaticamente.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-header" onclick="toggle(this)">
+        <span class="cmd-name">/tag</span>
+        <span class="cmd-desc">Criar atalhos de resposta automática no chat</span>
+        <span class="cmd-perm perm-admin">🔒 Gerenciar servidor (para criar)</span>
+      </div>
+      <div class="cmd-body">
+        <ul>
+          <li><strong>/tag criar nome:regras conteudo:"Siga as regras do servidor!"</strong> — Criar tag</li>
+          <li><strong>/tag editar nome:regras conteudo:"Novo texto"</strong> — Editar tag existente</li>
+          <li><strong>/tag remover nome:regras</strong> — Apagar tag</li>
+          <li><strong>/tag lista</strong> — Ver todas as tags do servidor</li>
+          <li><strong>/tag ver nome:regras</strong> — Ver o conteúdo de uma tag</li>
+          <li><strong>/tag prefixo prefixo:?</strong> — Mudar o prefixo (padrão: <code>!</code>)</li>
+        </ul>
+        <p>Para usar uma tag no chat, basta digitar o prefixo + nome: <code>!regras</code></p>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <h2 id="faq">❓ Perguntas frequentes</h2>
+
+    <div class="cmd-card">
+      <div class="cmd-header" onclick="toggle(this)">
+        <span class="cmd-name">Os comandos não aparecem no Discord</span>
+        <span class="cmd-desc">Como resolver</span>
+      </div>
+      <div class="cmd-body">
+        <p>Os comandos slash são registrados automaticamente quando o bot inicia. Se não aparecerem:</p>
+        <ol>
+          <li>Verifique se o bot está <strong>Online</strong> no painel do DisCloud</li>
+          <li>Certifique-se de que ao convidar o bot, você marcou o escopo <strong><code>applications.commands</code></strong> além de <code>bot</code></li>
+          <li>Se <code>DEPLOY_GLOBAL=false</code>, os comandos só aparecem nos servidores onde o bot está — aguarde até 1 minuto após o bot entrar no servidor</li>
+          <li>Se <code>DEPLOY_GLOBAL=true</code>, pode demorar até 1 hora para o Discord propagar globalmente</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="cmd-header" onclick="toggle(this)">
+        <span class="cmd-name">Como convidar o bot para um servidor?</span>
+        <span class="cmd-desc">Gerar o link de convite</span>
+      </div>
+      <div class="cmd-body">
+        <ol>
+          <li>Acesse <strong>discord.com/developers</strong> e clique no seu app</li>
+          <li>Vá em <strong>OAuth2 → URL Generator</strong></li>
+          <li>Marque os escopos: <code>bot</code> e <code>applications.commands</code></li>
+          <li>Em "Bot Permissions", marque: <em>Administrator</em> (ou as permissões específicas necessárias)</li>
+          <li>Copie o link gerado e cole no navegador para convidar o bot</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="cmd-header" onclick="toggle(this)">
+        <span class="cmd-name">Posso usar o bot em vários servidores?</span>
+        <span class="cmd-desc">Multi-servidor</span>
+      </div>
+      <div class="cmd-body">
+        <p>Sim! O bot foi construído especificamente para isso. Cada servidor que adiciona o bot tem sua própria configuração independente. Um servidor nunca vê nem interfere nas configurações do outro.</p>
+        <p>O admin de cada servidor usa o <code>/configurar</code> e os outros comandos para personalizar o bot no seu servidor.</p>
+      </div>
+    </div>
+
+    <div class="cmd-card">
+      <div class="cmd-header" onclick="toggle(this)">
+        <span class="cmd-name">Os dados ficam salvos após reiniciar o bot?</span>
+        <span class="cmd-desc">Persistência de dados</span>
+      </div>
+      <div class="cmd-body">
+        <p>Sim. Todos os dados ficam salvos em um banco de dados SQLite no arquivo <code>data/bot-ticket.db</code>. O DisCloud mantém os arquivos da pasta <code>data/</code> entre restarts e atualizações do bot.</p>
+      </div>
+    </div>
+
+    <div class="footer">
+      Bot de Administração Discord v2.0.0 · Guia gerado automaticamente
+    </div>
+
+  </main>
+</div>
+
+<script>
+  function toggle(header) {
+    const body = header.nextElementSibling;
+    body.classList.toggle("open");
+  }
+
+  // Highlight sidebar link on scroll
+  const sections = document.querySelectorAll("[id]");
+  const links = document.querySelectorAll(".sidebar a");
+  window.addEventListener("scroll", () => {
+    let current = "";
+    sections.forEach((s) => {
+      if (window.scrollY >= s.offsetTop - 80) current = s.id;
+    });
+    links.forEach((a) => {
+      a.classList.toggle("active", a.getAttribute("href") === "#" + current);
+    });
+  });
+</script>
+</body>
+</html>

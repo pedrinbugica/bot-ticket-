@@ -299,6 +299,42 @@ export function buildCommandDefinitions() {
       ),
 
     new SlashCommandBuilder()
+      .setName("configurar")
+      .setDescription("Configura o bot para este servidor")
+      .addSubcommand((s) =>
+        s.setName("boas-vindas")
+          .setDescription("Configura o sistema de boas-vindas (requer Gerenciar servidor)")
+          .addChannelOption((o) => o.setName("canal").setDescription("Canal onde a mensagem de boas-vindas será enviada"))
+          .addStringOption((o) =>
+            o.setName("mensagem").setDescription("Mensagem de boas-vindas. Use {usuario}, {servidor}, {membros}").setMaxLength(1000)
+          )
+          .addChannelOption((o) => o.setName("canal-despedida").setDescription("Canal onde a mensagem de despedida será enviada"))
+          .addStringOption((o) =>
+            o.setName("mensagem-despedida").setDescription("Mensagem de despedida. Use {tag}, {servidor}, {membros}").setMaxLength(1000)
+          )
+          .addStringOption((o) =>
+            o.setName("dm").setDescription("Mensagem enviada por DM quando alguém entra no servidor").setMaxLength(1000)
+          )
+          .addRoleOption((o) => o.setName("auto-cargo").setDescription("Cargo dado automaticamente a quem entrar no servidor"))
+      )
+      .addSubcommand((s) =>
+        s.setName("logs")
+          .setDescription("Configura o canal e os eventos de log (requer Gerenciar servidor)")
+          .addChannelOption((o) => o.setName("canal").setDescription("Canal onde os logs do servidor serão enviados"))
+          .addBooleanOption((o) => o.setName("mensagem-editada").setDescription("Registrar mensagens editadas"))
+          .addBooleanOption((o) => o.setName("mensagem-apagada").setDescription("Registrar mensagens apagadas"))
+          .addBooleanOption((o) => o.setName("membro-entrou").setDescription("Registrar entrada de membros"))
+          .addBooleanOption((o) => o.setName("membro-saiu").setDescription("Registrar saída de membros"))
+          .addBooleanOption((o) => o.setName("membro-banido").setDescription("Registrar banimentos"))
+          .addBooleanOption((o) => o.setName("membro-desbanido").setDescription("Registrar desbanimentos"))
+          .addBooleanOption((o) => o.setName("cargo-alterado").setDescription("Registrar alterações de cargo de membros"))
+          .addBooleanOption((o) => o.setName("apelido-alterado").setDescription("Registrar mudanças de apelido"))
+      )
+      .addSubcommand((s) =>
+        s.setName("ver").setDescription("Mostra a configuração atual de boas-vindas e logs do servidor")
+      ),
+
+    new SlashCommandBuilder()
       .setName("ticket")
       .setDescription("Ações em tickets")
       .addSubcommand((s) =>

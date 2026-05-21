@@ -28,6 +28,7 @@ import { handleGiveawayButton } from "../giveaway/giveaway.js";
 import { handlePollsCommand } from "../commands/handlers/polls.js";
 import { handleLevelingCommand } from "../commands/handlers/leveling.js";
 import { handleTagsCommand } from "../commands/handlers/tags.js";
+import { handleConfigurarCommand } from "../commands/handlers/configurar.js";
 import { handlePollButton } from "../polls/polls.js";
 import { handleRoleMenuSelect } from "../roles/roleMenu.js";
 import {
@@ -50,6 +51,7 @@ export async function handleInteraction(interaction, client) {
       if (await handlePollsCommand(interaction, client)) return;
       if (await handleLevelingCommand(interaction)) return;
       if (await handleTagsCommand(interaction)) return;
+      if (await handleConfigurarCommand(interaction)) return;
       if (await handleTicketAddMember(interaction)) return;
       if (await handleTicketRemoveMember(interaction)) return;
       if (await handleTicketStats(interaction)) return;
