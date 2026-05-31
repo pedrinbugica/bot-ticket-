@@ -46,6 +46,12 @@ export function buildCommandDefinitions() {
         s.setName("remover")
           .setDescription("Remove/inativa um caso de infração")
           .addIntegerOption((o) => o.setName("caso").setDescription("Número do caso").setRequired(true).setMinValue(1))
+      )
+      .addSubcommand((s) =>
+        s.setName("purge")
+          .setDescription("Apaga mensagens em massa do canal atual (máx. 100, últimos 14 dias)")
+          .addIntegerOption((o) => o.setName("quantidade").setDescription("Número de mensagens a apagar (1–100)").setRequired(true).setMinValue(1).setMaxValue(100))
+          .addUserOption((o) => o.setName("usuario").setDescription("Filtrar apenas mensagens deste usuário (opcional)"))
       ),
 
     new SlashCommandBuilder()
@@ -282,6 +288,53 @@ export function buildCommandDefinitions() {
           .setDescription("Isenta um cargo das regras de auto-mod")
           .addRoleOption((o) => o.setName("cargo").setDescription("Cargo a isentar").setRequired(true))
       ),
+
+    new SlashCommandBuilder()
+      .setName("starboard")
+      .setDescription("Gerencia o starboard — canal de mensagens em destaque")
+      .addSubcommand((s) =>
+        s.setName("configurar")
+          .setDescription("Ativa e configura o starboard")
+          .addChannelOption((o) => o.setName("canal").setDescription("Canal onde as mensagens em destaque serão enviadas").setRequired(true))
+          .addStringOption((o) => o.setName("emoji").setDescription("Emoji de reação para o starboard (padrão: ⭐)").setMaxLength(50))
+          .addIntegerOption((o) => o.setName("minimo").setDescription("Mínimo de reações para entrar no starboard (padrão: 3)").setMinValue(1).setMaxValue(50))
+      )
+      .addSubcommand((s) => s.setName("ver").setDescription("Exibe a configuração atual do starboard"))
+      .addSubcommand((s) => s.setName("desativar").setDescription("Desativa o starboard sem apagar a configuração")),
+
+    new SlashCommandBuilder()
+      .setName("stats")
+      .setDescription("Gerencia canais de estatísticas do servidor")
+      .addSubcommand((s) =>
+        s.setName("criar")
+          .setDescription("Cria ou atualiza um canal de estatísticas")
+          .addStringOption((o) =>
+            o.setName("tipo").setDescription("Tipo de estatística").setRequired(true).addChoices(
+              { name: "👥 Membros totais", value: "membros" },
+              { name: "🧑 Membros humanos", value: "humanos" },
+              { name: "🤖 Bots", value: "bots" },
+              { name: "📢 Canais", value: "canais" },
+              { name: "🏷️ Cargos", value: "cargos" }
+            )
+          )
+          .addChannelOption((o) => o.setName("canal").setDescription("Canal de voz a usar como stat (será renomeado automaticamente)").setRequired(true))
+          .addStringOption((o) => o.setName("formato").setDescription('Formato do nome. Use {value} para o número. Ex: 👥 Membros: {value}').setMaxLength(100))
+      )
+      .addSubcommand((s) =>
+        s.setName("remover")
+          .setDescription("Remove um canal de estatísticas")
+          .addStringOption((o) =>
+            o.setName("tipo").setDescription("Tipo a remover").setRequired(true).addChoices(
+              { name: "👥 Membros totais", value: "membros" },
+              { name: "🧑 Membros humanos", value: "humanos" },
+              { name: "🤖 Bots", value: "bots" },
+              { name: "📢 Canais", value: "canais" },
+              { name: "🏷️ Cargos", value: "cargos" }
+            )
+          )
+      )
+      .addSubcommand((s) => s.setName("lista").setDescription("Lista todos os canais de estatísticas configurados"))
+      .addSubcommand((s) => s.setName("atualizar").setDescription("Força atualização imediata de todos os canais de estatísticas")),
 
     new SlashCommandBuilder()
       .setName("ticket-painel")

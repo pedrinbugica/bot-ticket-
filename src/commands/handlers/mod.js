@@ -207,5 +207,38 @@ export async function handleModCommand(interaction) {
     return true;
   }
 
+  if (sub === "purge") {
+    if (!moderator.permissions.has(PermissionFlagsBits.ManageMessages)) {
+      return interaction.editReply({ content: "❌ Você precisa da permissão **Gerenciar mensagens**." }), true;
+    }
+    const amount = interaction.options.getInteger("quantidade");
+    const filterUser = interaction.options.getUser("usuario");
+    const channel = interaction.channel;
+
+    if (!channel?.isTextBased()) {
+      return interaction.editReply({ content: "❌ Este comando só funciona em canais de texto." }), true;
+    }
+
+    const fetched = await channel.messages.fetch({ limit: filterUser ? 100 : amount });
+    const cutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
+
+    let toDelete = [...fetched.values()].filter((m) => m.createdTimestamp > cutoff);
+    if (filterUser) toDelete = toDelete.filter((m) => m.author.id === filterUser.id).slice(0, amount);
+
+    if (!toDelete.length) {
+      return interaction.editReply({ content: "❌ Nenhuma mensagem encontrada para apagar (mensagens com mais de 14 dias não podem ser apagadas em massa)." }), true;
+    }
+
+    const deleted = await channel.bulkDelete(toDelete, true).catch(() => null);
+    const count = deleted?.size ?? toDelete.length;
+
+    const desc = filterUser
+      ? `🗑️ **${count}** mensagem(ns) de ${filterUser} apagadas do ${channel}.`
+      : `🗑️ **${count}** mensagem(ns) apagadas do ${channel}.`;
+
+    await interaction.editReply({ content: desc });
+    return true;
+  }
+
   return false;
 }

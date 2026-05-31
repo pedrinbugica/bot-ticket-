@@ -80,6 +80,46 @@ function runMigrations(database) {
   migratePolls(database);
   migrateLeveling(database);
   migrateTags(database);
+  migrateStarboard(database);
+  migrateStats(database);
+}
+
+function migrateStarboard(database) {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS starboard_config (
+      guild_id      TEXT PRIMARY KEY,
+      channel_id    TEXT NOT NULL,
+      emoji         TEXT NOT NULL DEFAULT '⭐',
+      min_reactions INTEGER NOT NULL DEFAULT 3,
+      enabled       INTEGER NOT NULL DEFAULT 1
+    );
+
+    CREATE TABLE IF NOT EXISTS starboard_entries (
+      id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+      guild_id            TEXT NOT NULL,
+      source_message_id   TEXT NOT NULL,
+      source_channel_id   TEXT NOT NULL,
+      starboard_message_id TEXT,
+      UNIQUE(guild_id, source_message_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_starboard_entries_guild ON starboard_entries(guild_id);
+  `);
+}
+
+function migrateStats(database) {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS stats_channels (
+      id        INTEGER PRIMARY KEY AUTOINCREMENT,
+      guild_id  TEXT NOT NULL,
+      stat_type TEXT NOT NULL,
+      channel_id TEXT NOT NULL,
+      format    TEXT NOT NULL DEFAULT '{value}',
+      UNIQUE(guild_id, stat_type)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_stats_channels_guild ON stats_channels(guild_id);
+  `);
 }
 
 function migrateWelcomeSettings(database) {

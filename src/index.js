@@ -26,6 +26,8 @@ import { startGiveawayJob } from "./jobs/giveaway.js";
 import { startPollsJob } from "./jobs/polls.js";
 import { registerLevelingEvents } from "./leveling/leveling.js";
 import { registerTagEvents } from "./tags/tags.js";
+import { registerStarboardEvents } from "./starboard/starboard.js";
+import { startStatsJob } from "./jobs/stats.js";
 
 const client = new Client({
   intents: [
@@ -46,6 +48,7 @@ registerReactionRoleEvents(client);
 registerAutomodEvents(client);
 registerLevelingEvents(client);
 registerTagEvents(client);
+registerStarboardEvents(client);
 
 client.once(Events.ClientReady, async (readyClient) => {
   console.log(`Conectado como ${readyClient.user.tag}`);
@@ -55,6 +58,7 @@ client.once(Events.ClientReady, async (readyClient) => {
   startExpiredMutesJob(readyClient);
   startGiveawayJob(readyClient);
   startPollsJob(readyClient);
+  startStatsJob(readyClient);
 
   const rest = new REST({ version: "10" }).setToken(env.token);
   setImmediate(() => {

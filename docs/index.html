@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+t<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -323,6 +323,11 @@
   <a href="#xp">XP e Níveis</a>
   <a href="#tags">Tags</a>
 
+  <span class="nav-group">Novidades</span>
+  <a href="#purge">🗑️ Purge</a>
+  <a href="#starboard">⭐ Starboard</a>
+  <a href="#stats">📊 Canais de Stats</a>
+
   <span class="nav-group">Testes</span>
   <a href="#como-testar">Guia de testes</a>
 </nav>
@@ -412,6 +417,21 @@
         <div class="icon">💬</div>
         <h4>Tags</h4>
         <p>Crie atalhos de resposta. Membro digita <code>!ajuda</code> e o bot responde com o texto que você configurou.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🗑️</div>
+        <h4>Purge</h4>
+        <p>Apaga até 100 mensagens de uma vez no canal atual. Pode filtrar por usuário para limpar só as mensagens de uma pessoa.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">⭐</div>
+        <h4>Starboard</h4>
+        <p>Mensagens que recebem reações suficientes são copiadas para um canal de destaque — o "mural de fama" do servidor.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">📊</div>
+        <h4>Canais de Stats</h4>
+        <p>Canais de voz com nomes que se atualizam automaticamente mostrando membros, canais, cargos e mais.</p>
       </div>
     </div>
   </section>
@@ -742,6 +762,216 @@
     </div>
   </section>
 
+  <!-- PURGE -->
+  <section id="purge">
+    <h2>🗑️ Purge — Apagar mensagens em massa</h2>
+    <p>
+      O comando <code>/mod purge</code> apaga várias mensagens de um canal de uma vez.
+      Pense nele como uma "vassoura" que limpa o canal rapidinho — sem precisar selecionar mensagem por mensagem.
+    </p>
+
+    <div class="alert alert-warning">
+      <strong>⚠️ Limitação do Discord</strong>
+      Só é possível apagar em massa mensagens com menos de <strong>14 dias</strong>. Mensagens mais antigas precisam ser apagadas uma a uma.
+    </div>
+
+    <h3>Como usar</h3>
+    <table class="cmd-table">
+      <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>/mod purge quantidade:50</code></td>
+          <td>Apaga as últimas 50 mensagens do canal (de qualquer pessoa)</td>
+        </tr>
+        <tr>
+          <td><code>/mod purge quantidade:20 usuario:@Pedro</code></td>
+          <td>Apaga as últimas 20 mensagens enviadas especificamente pelo Pedro</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Permissão necessária</h3>
+    <p>Apenas membros com a permissão <strong>Gerenciar mensagens</strong> conseguem usar este comando.</p>
+
+    <h3>Passo a passo para usar</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Vá ao canal que quer limpar</h4>
+          <p>O purge apaga mensagens do canal onde o comando for digitado.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Digite o comando</h4>
+          <p>Use <code>/mod purge quantidade:50</code> para limpar 50 mensagens. Se quiser limpar só de uma pessoa, adicione <code>usuario:@Nome</code>.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Confirme o resultado</h4>
+          <p>O bot responde com uma mensagem mostrando quantas mensagens foram apagadas (só você vê essa resposta).</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STARBOARD -->
+  <section id="starboard">
+    <h2>⭐ Starboard — Mensagens em destaque</h2>
+    <p>
+      O Starboard é um canal especial onde as mensagens mais curtidas do servidor aparecem automaticamente.
+      Quando uma mensagem recebe uma certa quantidade de reações ⭐ (ou outro emoji que você escolher), o bot copia ela para o canal do starboard.
+    </p>
+    <p>
+      Pense nele como um "mural de fama" — as melhores mensagens do servidor ficam guardadas ali para todo mundo ver.
+    </p>
+
+    <h3>Como ativar (passo a passo)</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Crie um canal para o starboard</h4>
+          <p>Crie um canal de texto no Discord, por exemplo <code>#⭐-starboard</code> ou <code>#melhores-momentos</code>. Só o bot precisa ter permissão de enviar mensagens lá.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Configure com o comando</h4>
+          <p>Use <code>/starboard configurar canal:#⭐-starboard</code>. Você pode também mudar o emoji e o mínimo de reações.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Teste!</h4>
+          <p>Envie uma mensagem em qualquer canal e peça para alguém reagir com ⭐. Quando atingir o mínimo configurado, o bot vai copiar automaticamente para o canal do starboard.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3>Comandos disponíveis</h3>
+    <table class="cmd-table">
+      <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>/starboard configurar canal:#starboard</code></td>
+          <td>Ativa o starboard no canal escolhido com as configurações padrão (⭐, mínimo 3)</td>
+        </tr>
+        <tr>
+          <td><code>/starboard configurar canal:#starboard emoji:🔥 minimo:5</code></td>
+          <td>Usa o emoji 🔥 e exige 5 reações para entrar no starboard</td>
+        </tr>
+        <tr>
+          <td><code>/starboard ver</code></td>
+          <td>Mostra a configuração atual (canal, emoji, mínimo de reações, status)</td>
+        </tr>
+        <tr>
+          <td><code>/starboard desativar</code></td>
+          <td>Pausa o starboard sem apagar a configuração. Para reativar, use <code>configurar</code> novamente.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="alert alert-info">
+      <strong>ℹ️ Como funciona por dentro</strong>
+      Quando a contagem de reações muda (alguém adiciona ou remove), o bot atualiza a mensagem no starboard automaticamente mostrando o número atual. A mensagem original nunca é apagada do canal onde foi enviada.
+    </div>
+
+    <div class="alert alert-warning">
+      <strong>⚠️ Atenção</strong>
+      O starboard não funciona para mensagens de bots. Também não copia mensagens enviadas dentro do próprio canal do starboard (para evitar loops).
+    </div>
+  </section>
+
+  <!-- CANAIS DE STATS -->
+  <section id="stats">
+    <h2>📊 Canais de Estatísticas</h2>
+    <p>
+      Os canais de estatísticas são canais de voz com nomes que se atualizam automaticamente mostrando números do servidor — como total de membros, quantidade de canais, etc.
+      Pense neles como um "placar ao vivo" do servidor visível na barra lateral para todo mundo.
+    </p>
+
+    <div class="alert alert-success">
+      <strong>✅ Dica visual</strong>
+      Use canais de <strong>voz</strong> para isso — membros não conseguem escrever neles, então o nome atualizado fica limpo e não "suja" com mensagens. Crie uma categoria separada chamada "📊 Servidor" para organizar.
+    </div>
+
+    <h3>Tipos de estatísticas disponíveis</h3>
+    <table class="cmd-table">
+      <thead><tr><th>Tipo</th><th>O que mostra</th><th>Exemplo de nome</th></tr></thead>
+      <tbody>
+        <tr><td><code>membros</code></td><td>Total de membros (humanos + bots)</td><td><code>👥 Membros: 1.234</code></td></tr>
+        <tr><td><code>humanos</code></td><td>Apenas membros humanos (sem bots)</td><td><code>🧑 Humanos: 1.229</code></td></tr>
+        <tr><td><code>bots</code></td><td>Quantidade de bots no servidor</td><td><code>🤖 Bots: 5</code></td></tr>
+        <tr><td><code>canais</code></td><td>Total de canais (texto + voz + categoria)</td><td><code>📢 Canais: 42</code></td></tr>
+        <tr><td><code>cargos</code></td><td>Total de cargos criados no servidor</td><td><code>🏷️ Cargos: 18</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Como configurar (passo a passo)</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Crie uma categoria e canais de voz</h4>
+          <p>No Discord, crie uma categoria chamada <strong>📊 Estatísticas</strong>. Dentro dela, crie canais de voz com qualquer nome provisório — o bot vai renomeá-los.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Tire a permissão de "Conectar" dos membros</h4>
+          <p>Nas permissões da categoria, remova a permissão <strong>Conectar</strong> de @everyone — assim ninguém entra no canal, ele fica apenas visual.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Use o comando para vincular</h4>
+          <p>Para cada tipo de stat que quiser mostrar, use <code>/stats criar tipo:[tipo] canal:[canal de voz]</code>. O bot atualiza o nome na hora e depois a cada 10 minutos.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3>Comandos disponíveis</h3>
+    <table class="cmd-table">
+      <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>/stats criar tipo:membros canal:#membros-totais</code></td>
+          <td>Vincula o canal ao contador de membros totais com o formato padrão</td>
+        </tr>
+        <tr>
+          <td><code>/stats criar tipo:membros canal:#membros formato:🌍 Total: {value}</code></td>
+          <td>Usa um formato personalizado. O <code>{value}</code> é substituído pelo número real</td>
+        </tr>
+        <tr>
+          <td><code>/stats lista</code></td>
+          <td>Mostra todos os canais de stats configurados com seus formatos</td>
+        </tr>
+        <tr>
+          <td><code>/stats remover tipo:membros</code></td>
+          <td>Remove a vinculação (o canal continua existindo, só para de ser atualizado)</td>
+        </tr>
+        <tr>
+          <td><code>/stats atualizar</code></td>
+          <td>Força atualização imediata de todos os canais sem esperar os 10 minutos</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="alert alert-warning">
+      <strong>⚠️ Limite do Discord</strong>
+      O Discord permite renomear um canal no máximo 2 vezes por 10 minutos. Por isso o bot atualiza em intervalos de 10 minutos para não ser bloqueado pela API. Se usar <code>/stats atualizar</code> seguidas vezes, algumas atualizações podem ser ignoradas.
+    </div>
+  </section>
+
   <!-- COMO TESTAR -->
   <section id="como-testar">
     <h2>✅ Guia completo de testes</h2>
@@ -878,6 +1108,41 @@
           <div class="check-item"><input type="checkbox" id="c11c"><label for="c11c">Use <code>/tag lista</code> → a tag aparece com contador de usos</label></div>
           <div class="check-item"><input type="checkbox" id="c11d"><label for="c11d">Use <code>/tag prefixo prefixo:?</code> e teste com <code>?oi</code></label></div>
           <div class="check-item"><input type="checkbox" id="c11e"><label for="c11e">Volte o prefixo para <code>!</code> com <code>/tag prefixo prefixo:!</code></label></div>
+        </div>
+      </details>
+
+      <details class="check-group">
+        <summary>🗑️ Purge</summary>
+        <div class="check-body">
+          <div class="check-item"><input type="checkbox" id="c12a"><label for="c12a">Envie 10 mensagens de teste num canal qualquer</label></div>
+          <div class="check-item"><input type="checkbox" id="c12b"><label for="c12b">Use <code>/mod purge quantidade:5</code> → 5 mensagens são apagadas imediatamente</label></div>
+          <div class="check-item"><input type="checkbox" id="c12c"><label for="c12c">Envie mais mensagens com outra conta, depois use <code>/mod purge quantidade:10 usuario:@outra-conta</code> → só as mensagens da outra conta são apagadas</label></div>
+          <div class="check-item"><input type="checkbox" id="c12d"><label for="c12d">Tente usar o comando sem ter a permissão "Gerenciar mensagens" → o bot deve recusar com erro</label></div>
+        </div>
+      </details>
+
+      <details class="check-group">
+        <summary>⭐ Starboard</summary>
+        <div class="check-body">
+          <div class="check-item"><input type="checkbox" id="c13a"><label for="c13a">Crie um canal de texto chamado <code>#⭐-starboard</code></label></div>
+          <div class="check-item"><input type="checkbox" id="c13b"><label for="c13b">Use <code>/starboard configurar canal:#⭐-starboard minimo:2</code> (mínimo 2 para facilitar o teste)</label></div>
+          <div class="check-item"><input type="checkbox" id="c13c"><label for="c13c">Use <code>/starboard ver</code> → confirme que mostra canal, emoji ⭐ e mínimo 2</label></div>
+          <div class="check-item"><input type="checkbox" id="c13d"><label for="c13d">Envie uma mensagem num canal qualquer e peça 2 pessoas para reagir com ⭐ → a mensagem deve aparecer no #⭐-starboard automaticamente</label></div>
+          <div class="check-item"><input type="checkbox" id="c13e"><label for="c13e">Adicione mais uma reação ⭐ → a mensagem no starboard deve atualizar o contador</label></div>
+          <div class="check-item"><input type="checkbox" id="c13f"><label for="c13f">Use <code>/starboard desativar</code> → confirme que novas reações não geram mais entradas</label></div>
+        </div>
+      </details>
+
+      <details class="check-group">
+        <summary>📊 Canais de Estatísticas</summary>
+        <div class="check-body">
+          <div class="check-item"><input type="checkbox" id="c14a"><label for="c14a">Crie uma categoria chamada <code>📊 Servidor</code> e 2 canais de voz dentro dela com nomes provisórios</label></div>
+          <div class="check-item"><input type="checkbox" id="c14b"><label for="c14b">Use <code>/stats criar tipo:membros canal:[canal de voz 1]</code> → o canal deve ser renomeado para <code>👥 Membros: X</code> na hora</label></div>
+          <div class="check-item"><input type="checkbox" id="c14c"><label for="c14c">Use <code>/stats criar tipo:canais canal:[canal de voz 2]</code> → o canal deve ser renomeado para <code>📢 Canais: X</code></label></div>
+          <div class="check-item"><input type="checkbox" id="c14d"><label for="c14d">Use <code>/stats lista</code> → os dois canais aparecem com seus tipos e formatos</label></div>
+          <div class="check-item"><input type="checkbox" id="c14e"><label for="c14e">Use <code>/stats criar tipo:membros canal:[canal 1] formato:🌍 Comunidade: {value}</code> → o nome do canal muda para o formato personalizado</label></div>
+          <div class="check-item"><input type="checkbox" id="c14f"><label for="c14f">Use <code>/stats atualizar</code> → confirme que todos os canais são atualizados imediatamente</label></div>
+          <div class="check-item"><input type="checkbox" id="c14g"><label for="c14g">Use <code>/stats remover tipo:canais</code> → o canal deixa de ser atualizado mas continua existindo</label></div>
         </div>
       </details>
 
