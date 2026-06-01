@@ -96,24 +96,14 @@ export async function finalizeTicketClose({
 
   deleteTicket(channel.id);
 
-  if (inactivityClose && opener) {
+  if (opener) {
     try {
-      const files = guildConfig.sendDmOnClose ? [htmlAttachment] : [];
-      await opener.send({
-        content: `Seu ticket em **${guild.name}** foi encerrado automaticamente por inatividade.${closeReason ? ` (${closeReason})` : ""}`,
-        files,
-      });
+      const content = inactivityClose
+        ? `Seu ticket em **${guild.name}** foi encerrado por inatividade.${closeReason ? ` Motivo: ${closeReason}` : ""} Segue o transcript da conversa:`
+        : `Seu ticket em **${guild.name}** foi encerrado. Segue o transcript da conversa:`;
+      await opener.send({ content, files: [htmlAttachment] });
     } catch {
-      /* DMs fechadas */
-    }
-  } else if (guildConfig.sendDmOnClose && opener) {
-    try {
-      await opener.send({
-        content: `Seu ticket em **${guild.name}** foi encerrado. Segue o transcript da conversa:`,
-        files: [htmlAttachment],
-      });
-    } catch {
-      /* DMs fechadas */
+      /* DMs fechadas pelo usuário */
     }
   }
 
