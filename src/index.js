@@ -17,7 +17,7 @@ import { handleInteraction } from "./handlers/index.js";
 import { acknowledgeInteraction } from "./util/interactionAck.js";
 import { registerActivityTracking } from "./jobs/activity.js";
 import { startInactivityJob } from "./jobs/inactivity.js";
-import { startExpiredMutesJob } from "./jobs/expiredMutes.js";
+import { startExpiredActionsJob } from "./jobs/expiredMutes.js";
 import { registerServerLogEvents } from "./events/serverLog.js";
 import { registerWelcomeEvents } from "./welcome/welcome.js";
 import { registerReactionRoleEvents } from "./roles/reactionRoles.js";
@@ -55,7 +55,7 @@ client.once(Events.ClientReady, async (readyClient) => {
   getDb();
 
   startInactivityJob(readyClient);
-  startExpiredMutesJob(readyClient);
+  startExpiredActionsJob(readyClient);
   startGiveawayJob(readyClient);
   startPollsJob(readyClient);
   startStatsJob(readyClient);

@@ -52,6 +52,19 @@ export function buildCommandDefinitions() {
           .setDescription("Apaga mensagens em massa do canal atual (máx. 100, últimos 14 dias)")
           .addIntegerOption((o) => o.setName("quantidade").setDescription("Número de mensagens a apagar (1–100)").setRequired(true).setMinValue(1).setMaxValue(100))
           .addUserOption((o) => o.setName("usuario").setDescription("Filtrar apenas mensagens deste usuário (opcional)"))
+      )
+      .addSubcommand((s) =>
+        s.setName("slowmode")
+          .setDescription("Define o modo lento em um canal (0 = desativar)")
+          .addChannelOption((o) => o.setName("canal").setDescription("Canal de texto").setRequired(true))
+          .addStringOption((o) => o.setName("duracao").setDescription("Duração: 0 (off), 30s, 1m, 1h (máx. 6h)").setRequired(true))
+      )
+      .addSubcommand((s) =>
+        s.setName("tempban")
+          .setDescription("Bane um membro temporariamente — desbanido automaticamente ao fim do prazo")
+          .addUserOption((o) => o.setName("usuario").setDescription("Membro").setRequired(true))
+          .addStringOption((o) => o.setName("duracao").setDescription("Duração: 1h, 2d, 7d (máx. 365d)").setRequired(true))
+          .addStringOption((o) => o.setName("motivo").setDescription("Motivo").setMaxLength(500))
       ),
 
     new SlashCommandBuilder()

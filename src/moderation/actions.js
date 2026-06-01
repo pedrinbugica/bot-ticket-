@@ -1,13 +1,14 @@
 import { EmbedBuilder } from "discord.js";
-import { insertInfraction } from "../db/infractions.js";
+import { insertInfraction, countActiveWarns } from "../db/infractions.js";
 
-const ACTION_COLORS = { warn: 0xffa500, mute: 0xff6600, kick: 0xff4400, ban: 0xff0000 };
+const ACTION_COLORS = { warn: 0xffa500, mute: 0xff6600, kick: 0xff4400, ban: 0xff0000, tempban: 0xff2200 };
 
 const ACTION_LABELS = {
   warn: "Aviso recebido",
   mute: "Você foi silenciado",
   kick: "Você foi removido do servidor",
   ban: "Você foi banido do servidor",
+  tempban: "Você foi banido temporariamente",
 };
 
 export function parseDuration(str) {
@@ -53,7 +54,28 @@ export async function warnMember({ guild, target, moderator, reason }) {
   });
   const user = target.user ?? target;
   const dmSent = await tryDm(user, buildDmEmbed({ action: "warn", guildName: guild.name, reason, caseNumber }));
-  return { caseNumber, dmSent };
+
+  const warnCount = countActiveWarns(guild.id, target.id);
+  let escalation = null;
+
+  if (warnCount === 5 && target.kickable) {
+    try {
+      const { caseNumber: escCase } = await kickMember({
+        guild, target, moderator, reason: `Auto-escalação: ${warnCount} avisos ativos`,
+      });
+      escalation = { action: "kick", caseNumber: escCase, count: warnCount };
+    } catch { /* sem permissão, ignora */ }
+  } else if (warnCount === 3 && target.moderatable) {
+    try {
+      const muteMs = 60 * 60 * 1000;
+      const { caseNumber: escCase } = await muteMember({
+        guild, target, moderator, reason: `Auto-escalação: ${warnCount} avisos ativos`, durationMs: muteMs,
+      });
+      escalation = { action: "mute", caseNumber: escCase, count: warnCount, durationMs: muteMs };
+    } catch { /* sem permissão, ignora */ }
+  }
+
+  return { caseNumber, dmSent, escalation };
 }
 
 export async function muteMember({ guild, target, moderator, reason, durationMs }) {
@@ -97,5 +119,21 @@ export async function banMember({ guild, target, moderator, reason, deleteMessag
     reason: reason ?? "Moderação",
     deleteMessageSeconds: deleteMessageDays * 86_400,
   });
+  return { caseNumber };
+}
+
+export async function tempbanMember({ guild, target, moderator, reason, durationMs }) {
+  const clamped = Math.min(durationMs, 365 * 24 * 60 * 60 * 1000);
+  const expiresAt = new Date(Date.now() + clamped).toISOString();
+  const userId = target.id;
+  const user = target.user ?? target;
+  const { caseNumber } = insertInfraction({
+    guildId: guild.id, userId, modId: moderator.id,
+    action: "tempban", reason,
+    duration: Math.floor(clamped / 60_000),
+    expiresAt,
+  });
+  await tryDm(user, buildDmEmbed({ action: "tempban", guildName: guild.name, reason, caseNumber, durationMs: clamped }));
+  await guild.members.ban(userId, { reason: reason ?? "Moderação", deleteMessageSeconds: 0 });
   return { caseNumber };
 }

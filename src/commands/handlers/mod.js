@@ -1,6 +1,6 @@
 import { EmbedBuilder, MessageFlags, PermissionFlagsBits } from "discord.js";
 import {
-  warnMember, muteMember, kickMember, banMember,
+  warnMember, muteMember, kickMember, banMember, tempbanMember,
   parseDuration, formatDuration,
 } from "../../moderation/actions.js";
 import {
@@ -8,9 +8,9 @@ import {
   deactivateInfraction, getRecentCases,
 } from "../../db/infractions.js";
 
-const ACTION_ICONS = { warn: "⚠️", mute: "🔇", kick: "👢", ban: "🔨" };
-const ACTION_COLORS = { warn: 0xffa500, mute: 0xff6600, kick: 0xff4400, ban: 0xff0000 };
-const ACTION_LABELS = { warn: "Aviso aplicado", mute: "Membro silenciado", kick: "Membro expulso", ban: "Membro banido" };
+const ACTION_ICONS = { warn: "⚠️", mute: "🔇", kick: "👢", ban: "🔨", tempban: "⏳" };
+const ACTION_COLORS = { warn: 0xffa500, mute: 0xff6600, kick: 0xff4400, ban: 0xff0000, tempban: 0xff2200 };
+const ACTION_LABELS = { warn: "Aviso aplicado", mute: "Membro silenciado", kick: "Membro expulso", ban: "Membro banido", tempban: "Membro banido temporariamente" };
 
 function isHierarchyBlocked(moderator, target, guild) {
   if (!moderator.roles || !target.roles) return false;
@@ -104,8 +104,15 @@ export async function handleModCommand(interaction) {
     const err = validateTarget(interaction, target);
     if (err) return interaction.editReply({ content: `❌ ${err}` }), true;
 
-    const { caseNumber, dmSent } = await warnMember({ guild, target, moderator, reason });
-    await interaction.editReply({ embeds: [buildResultEmbed("warn", target.user, caseNumber, reason, null, dmSent)] });
+    const { caseNumber, dmSent, escalation } = await warnMember({ guild, target, moderator, reason });
+    const warnEmbed = buildResultEmbed("warn", target.user, caseNumber, reason, null, dmSent);
+    if (escalation) {
+      const escLabel = escalation.action === "kick"
+        ? `👢 Membro expulso automaticamente (${escalation.count} avisos — caso #${escalation.caseNumber})`
+        : `🔇 Membro silenciado por 1h automaticamente (${escalation.count} avisos — caso #${escalation.caseNumber})`;
+      warnEmbed.addFields({ name: "🔺 Autoescalonamento", value: escLabel, inline: false });
+    }
+    await interaction.editReply({ embeds: [warnEmbed] });
     return true;
   }
 
@@ -204,6 +211,62 @@ export async function handleModCommand(interaction) {
     if (!inf) return interaction.editReply({ content: `❌ Caso #${caseNum} não encontrado neste servidor.` }), true;
     deactivateInfraction(inf.id);
     await interaction.editReply({ content: `✅ Caso **#${caseNum}** marcado como removido.` });
+    return true;
+  }
+
+  if (sub === "slowmode") {
+    if (!moderator.permissions.has(PermissionFlagsBits.ManageChannels)) {
+      return interaction.editReply({ content: "❌ Você precisa da permissão **Gerenciar canais**." }), true;
+    }
+    const targetChannel = interaction.options.getChannel("canal");
+    const duracaoStr = interaction.options.getString("duracao").trim();
+
+    let segundos;
+    if (duracaoStr === "0") {
+      segundos = 0;
+    } else {
+      const ms = parseDuration(duracaoStr);
+      if (!ms || ms <= 0) {
+        return interaction.editReply({ content: "❌ Duração inválida. Use `0` para desativar, ou ex: `30s`, `1m`, `1h` (máx. `6h`)." }), true;
+      }
+      segundos = Math.floor(ms / 1000);
+    }
+
+    if (segundos > 21600) {
+      return interaction.editReply({ content: "❌ O modo lento máximo é `6h` (21600 segundos)." }), true;
+    }
+
+    await targetChannel.setRateLimitPerUser(segundos, "Slowmode via /mod").catch(() => null);
+
+    const msg = segundos === 0
+      ? `✅ Modo lento **desativado** em ${targetChannel}.`
+      : `✅ Modo lento de **${formatDuration(segundos * 1000)}** ativado em ${targetChannel}.`;
+
+    await interaction.editReply({ content: msg });
+    return true;
+  }
+
+  if (sub === "tempban") {
+    if (!moderator.permissions.has(PermissionFlagsBits.BanMembers)) {
+      return interaction.editReply({ content: "❌ Você precisa da permissão **Banir membros**." }), true;
+    }
+    const target = interaction.options.getMember("usuario");
+    const durationStr = interaction.options.getString("duracao");
+    const reason = interaction.options.getString("motivo");
+
+    const err = validateTarget(interaction, target);
+    if (err) return interaction.editReply({ content: `❌ ${err}` }), true;
+    if (!target.bannable) {
+      return interaction.editReply({ content: "❌ Não tenho permissão para banir este membro (hierarquia)." }), true;
+    }
+
+    const durationMs = parseDuration(durationStr);
+    if (!durationMs || durationMs <= 0) {
+      return interaction.editReply({ content: "❌ Duração inválida. Use ex: `1h`, `2d`, `7d`." }), true;
+    }
+
+    const { caseNumber } = await tempbanMember({ guild, target, moderator, reason, durationMs });
+    await interaction.editReply({ embeds: [buildResultEmbed("tempban", target.user, caseNumber, reason, durationMs, false)] });
     return true;
   }
 

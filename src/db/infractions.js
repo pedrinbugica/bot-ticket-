@@ -38,10 +38,24 @@ export function deactivateInfraction(id) {
   getDb().prepare("UPDATE infractions SET active = 0 WHERE id = ?").run(id);
 }
 
+export function countActiveWarns(guildId, userId) {
+  return getDb()
+    .prepare("SELECT COUNT(*) AS c FROM infractions WHERE guild_id = ? AND user_id = ? AND action = 'warn' AND active = 1")
+    .get(guildId, userId).c;
+}
+
 export function listExpiredMutes() {
   return getDb()
     .prepare(
       "SELECT * FROM infractions WHERE action = 'mute' AND active = 1 AND expires_at IS NOT NULL AND expires_at <= datetime('now')"
+    )
+    .all();
+}
+
+export function listExpiredBans() {
+  return getDb()
+    .prepare(
+      "SELECT * FROM infractions WHERE action = 'tempban' AND active = 1 AND expires_at IS NOT NULL AND expires_at <= datetime('now')"
     )
     .all();
 }
