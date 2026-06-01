@@ -98,7 +98,7 @@ export async function finalizeTicketClose({
 
   if (inactivityClose && opener) {
     try {
-      const files = guildConfig.sendDmOnClose ? [txtAttachment] : [];
+      const files = guildConfig.sendDmOnClose ? [htmlAttachment] : [];
       await opener.send({
         content: `Seu ticket em **${guild.name}** foi encerrado automaticamente por inatividade.${closeReason ? ` (${closeReason})` : ""}`,
         files,
@@ -109,8 +109,8 @@ export async function finalizeTicketClose({
   } else if (guildConfig.sendDmOnClose && opener) {
     try {
       await opener.send({
-        content: `Seu ticket em **${guild.name}** foi encerrado.`,
-        files: [txtAttachment],
+        content: `Seu ticket em **${guild.name}** foi encerrado. Segue o transcript da conversa:`,
+        files: [htmlAttachment],
       });
     } catch {
       /* DMs fechadas */
