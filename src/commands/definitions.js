@@ -314,10 +314,14 @@ export function buildCommandDefinitions() {
               { name: "🧑 Membros humanos", value: "humanos" },
               { name: "🤖 Bots", value: "bots" },
               { name: "📢 Canais", value: "canais" },
-              { name: "🏷️ Cargos", value: "cargos" }
+              { name: "🏷️ Cargos", value: "cargos" },
+              { name: "🚀 Boosts do servidor", value: "boosts" },
+              { name: "💎 Nível de Boost (0-3)", value: "nivel-boost" },
+              { name: "😄 Emojis", value: "emojis" },
+              { name: "🎫 Tickets abertos", value: "tickets" }
             )
           )
-          .addChannelOption((o) => o.setName("canal").setDescription("Canal de voz a usar como stat (será renomeado automaticamente)").setRequired(true))
+          .addChannelOption((o) => o.setName("categoria").setDescription("Categoria onde o canal será criado (opcional)").setChannelTypes(13))
           .addStringOption((o) => o.setName("formato").setDescription('Formato do nome. Use {value} para o número. Ex: 👥 Membros: {value}').setMaxLength(100))
       )
       .addSubcommand((s) =>
@@ -329,7 +333,11 @@ export function buildCommandDefinitions() {
               { name: "🧑 Membros humanos", value: "humanos" },
               { name: "🤖 Bots", value: "bots" },
               { name: "📢 Canais", value: "canais" },
-              { name: "🏷️ Cargos", value: "cargos" }
+              { name: "🏷️ Cargos", value: "cargos" },
+              { name: "🚀 Boosts do servidor", value: "boosts" },
+              { name: "💎 Nível de Boost (0-3)", value: "nivel-boost" },
+              { name: "😄 Emojis", value: "emojis" },
+              { name: "🎫 Tickets abertos", value: "tickets" }
             )
           )
       )

@@ -1,6 +1,6 @@
 import { getDb } from "./index.js";
 
-export const STAT_TYPES = ["membros", "humanos", "bots", "canais", "cargos"];
+export const STAT_TYPES = ["membros", "humanos", "bots", "canais", "cargos", "boosts", "nivel-boost", "emojis", "tickets"];
 
 export function listStatsChannels(guildId) {
   return getDb()
