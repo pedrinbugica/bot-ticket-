@@ -46,9 +46,15 @@ function formatName(template, value) {
   return template.replace("{value}", String(value)).slice(0, 100);
 }
 
+const NEEDS_MEMBER_FETCH = new Set(["humanos", "bots"]);
+
 export async function updateStatsForGuild(guild) {
   const rows = listStatsChannels(guild.id);
   if (!rows.length) return;
+
+  if (rows.some((r) => NEEDS_MEMBER_FETCH.has(r.stat_type))) {
+    await guild.members.fetch().catch(() => null);
+  }
 
   for (const row of rows) {
     const channel = guild.channels.cache.get(row.channel_id)
