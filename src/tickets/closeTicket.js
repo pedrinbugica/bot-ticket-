@@ -30,7 +30,13 @@ export async function finalizeTicketClose({
       : `${Math.floor(durationSec / 60)}min (${durationSec}s)`;
 
   const text = await buildChannelTranscript(channel);
-  const html = await buildChannelTranscriptHtml(channel);
+  const html = await buildChannelTranscriptHtml(channel, {
+    opener,
+    closer,
+    typeLabel,
+    durationLabel,
+    closeReason,
+  });
   const txtAttachment = new AttachmentBuilder(Buffer.from(text, "utf8"), {
     name: `transcript-${channel.name}-${channel.id}.txt`,
   });
