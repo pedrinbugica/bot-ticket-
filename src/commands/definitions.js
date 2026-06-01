@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
+import { SlashCommandBuilder, PermissionFlagsBits, ChannelType } from "discord.js";
 
 export function buildCommandDefinitions() {
   return [
@@ -321,7 +321,7 @@ export function buildCommandDefinitions() {
               { name: "🎫 Tickets abertos", value: "tickets" }
             )
           )
-          .addChannelOption((o) => o.setName("categoria").setDescription("Categoria onde o canal será criado (opcional)").setChannelTypes(13))
+          .addChannelOption((o) => o.setName("categoria").setDescription("Categoria onde o canal será criado (opcional)").addChannelTypes(ChannelType.GuildCategory))
           .addStringOption((o) => o.setName("formato").setDescription('Formato do nome. Use {value} para o número. Ex: 👥 Membros: {value}').setMaxLength(100))
       )
       .addSubcommand((s) =>
