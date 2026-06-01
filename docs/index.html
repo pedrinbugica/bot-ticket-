@@ -893,71 +893,79 @@ t<!DOCTYPE html>
   <section id="stats">
     <h2>📊 Canais de Estatísticas</h2>
     <p>
-      Os canais de estatísticas são canais de voz com nomes que se atualizam automaticamente mostrando números do servidor — como total de membros, quantidade de canais, etc.
-      Pense neles como um "placar ao vivo" do servidor visível na barra lateral para todo mundo.
+      Os canais de estatísticas são canais de voz com nomes que se atualizam automaticamente mostrando números do servidor — total de membros, boosts, tickets abertos e mais.
+      Pense neles como um "placar ao vivo" visível na barra lateral do Discord para todo mundo.
     </p>
 
     <div class="alert alert-success">
-      <strong>✅ Dica visual</strong>
-      Use canais de <strong>voz</strong> para isso — membros não conseguem escrever neles, então o nome atualizado fica limpo e não "suja" com mensagens. Crie uma categoria separada chamada "📊 Servidor" para organizar.
+      <strong>✅ O bot cria o canal sozinho!</strong>
+      Não precisa criar nada manualmente. Só use o comando <code>/stats criar</code> e o bot já cria o canal de voz, bloqueia membros de entrar e coloca o número certo no nome.
     </div>
 
-    <h3>Tipos de estatísticas disponíveis</h3>
-    <table class="cmd-table">
-      <thead><tr><th>Tipo</th><th>O que mostra</th><th>Exemplo de nome</th></tr></thead>
-      <tbody>
-        <tr><td><code>membros</code></td><td>Total de membros (humanos + bots)</td><td><code>👥 Membros: 1.234</code></td></tr>
-        <tr><td><code>humanos</code></td><td>Apenas membros humanos (sem bots)</td><td><code>🧑 Humanos: 1.229</code></td></tr>
-        <tr><td><code>bots</code></td><td>Quantidade de bots no servidor</td><td><code>🤖 Bots: 5</code></td></tr>
-        <tr><td><code>canais</code></td><td>Total de canais (texto + voz + categoria)</td><td><code>📢 Canais: 42</code></td></tr>
-        <tr><td><code>cargos</code></td><td>Total de cargos criados no servidor</td><td><code>🏷️ Cargos: 18</code></td></tr>
-      </tbody>
-    </table>
-
-    <h3>Como configurar (passo a passo)</h3>
+    <h3>Como usar — é só um comando</h3>
     <div class="steps">
       <div class="step">
         <div class="step-num">1</div>
         <div class="step-body">
-          <h4>Crie uma categoria e canais de voz</h4>
-          <p>No Discord, crie uma categoria chamada <strong>📊 Estatísticas</strong>. Dentro dela, crie canais de voz com qualquer nome provisório — o bot vai renomeá-los.</p>
+          <h4>(Opcional) Crie uma categoria para organizar</h4>
+          <p>Se quiser deixar os canais de stats agrupados, crie uma categoria no Discord chamada <strong>📊 Servidor</strong> por exemplo. Não é obrigatório.</p>
         </div>
       </div>
       <div class="step">
         <div class="step-num">2</div>
         <div class="step-body">
-          <h4>Tire a permissão de "Conectar" dos membros</h4>
-          <p>Nas permissões da categoria, remova a permissão <strong>Conectar</strong> de @everyone — assim ninguém entra no canal, ele fica apenas visual.</p>
+          <h4>Use o comando</h4>
+          <p>Digite <code>/stats criar tipo:membros</code> — o bot cria o canal de voz na hora com o nome já atualizado. Se quiser colocar dentro de uma categoria, adicione <code>categoria:#nome-da-categoria</code>.</p>
         </div>
       </div>
       <div class="step">
         <div class="step-num">3</div>
         <div class="step-body">
-          <h4>Use o comando para vincular</h4>
-          <p>Para cada tipo de stat que quiser mostrar, use <code>/stats criar tipo:[tipo] canal:[canal de voz]</code>. O bot atualiza o nome na hora e depois a cada 10 minutos.</p>
+          <h4>Pronto!</h4>
+          <p>O canal já aparece na barra lateral com o número real. Atualiza automaticamente a cada 10 minutos. Repita para cada tipo de stat que quiser.</p>
         </div>
       </div>
     </div>
+
+    <h3>Tipos disponíveis (9 no total)</h3>
+    <table class="cmd-table">
+      <thead><tr><th>Tipo</th><th>O que mostra</th><th>Nome padrão do canal</th></tr></thead>
+      <tbody>
+        <tr><td><code>membros</code></td><td>Total de membros (humanos + bots)</td><td><code>👥 Membros: 1.234</code></td></tr>
+        <tr><td><code>humanos</code></td><td>Só membros humanos (sem bots)</td><td><code>🧑 Humanos: 1.229</code></td></tr>
+        <tr><td><code>bots</code></td><td>Quantidade de bots no servidor</td><td><code>🤖 Bots: 5</code></td></tr>
+        <tr><td><code>canais</code></td><td>Total de canais (texto + voz + categoria)</td><td><code>📢 Canais: 42</code></td></tr>
+        <tr><td><code>cargos</code></td><td>Total de cargos criados no servidor</td><td><code>🏷️ Cargos: 18</code></td></tr>
+        <tr><td><code>boosts</code></td><td>Quantidade de boosts ativos no servidor</td><td><code>🚀 Boosts: 7</code></td></tr>
+        <tr><td><code>nivel-boost</code></td><td>Nível de boost do servidor (0, 1, 2 ou 3)</td><td><code>💎 Boost Nível 2</code></td></tr>
+        <tr><td><code>emojis</code></td><td>Quantidade de emojis personalizados</td><td><code>😄 Emojis: 64</code></td></tr>
+        <tr><td><code>tickets</code></td><td>Tickets de suporte abertos agora</td><td><code>🎫 Tickets abertos: 3</code></td></tr>
+      </tbody>
+    </table>
 
     <h3>Comandos disponíveis</h3>
     <table class="cmd-table">
       <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
       <tbody>
         <tr>
-          <td><code>/stats criar tipo:membros canal:#membros-totais</code></td>
-          <td>Vincula o canal ao contador de membros totais com o formato padrão</td>
+          <td><code>/stats criar tipo:membros</code></td>
+          <td>Cria um canal de voz com o contador de membros totais (nome padrão automático)</td>
         </tr>
         <tr>
-          <td><code>/stats criar tipo:membros canal:#membros formato:🌍 Total: {value}</code></td>
-          <td>Usa um formato personalizado. O <code>{value}</code> é substituído pelo número real</td>
+          <td><code>/stats criar tipo:boosts categoria:#📊-servidor</code></td>
+          <td>Cria o canal dentro de uma categoria específica do servidor</td>
+        </tr>
+        <tr>
+          <td><code>/stats criar tipo:membros formato:🌍 Comunidade: {value}</code></td>
+          <td>Usa um nome personalizado — o <code>{value}</code> é trocado pelo número real</td>
         </tr>
         <tr>
           <td><code>/stats lista</code></td>
-          <td>Mostra todos os canais de stats configurados com seus formatos</td>
+          <td>Mostra todos os canais de stats ativos e seus tipos</td>
         </tr>
         <tr>
           <td><code>/stats remover tipo:membros</code></td>
-          <td>Remove a vinculação (o canal continua existindo, só para de ser atualizado)</td>
+          <td>Remove o stat <strong>e apaga o canal de voz</strong> do servidor automaticamente</td>
         </tr>
         <tr>
           <td><code>/stats atualizar</code></td>
@@ -966,9 +974,17 @@ t<!DOCTYPE html>
       </tbody>
     </table>
 
+    <div class="alert alert-info">
+      <strong>ℹ️ Sobre o formato personalizado</strong>
+      Você pode mudar o nome do canal como quiser usando o parâmetro <code>formato</code>.
+      O <code>{value}</code> é onde o número entra. Exemplos:<br><br>
+      <code>formato:🌍 Comunidade: {value}</code> → <strong>🌍 Comunidade: 1.234</strong><br>
+      <code>formato:💎 Nível {value} de boost</code> → <strong>💎 Nível 2 de boost</strong>
+    </div>
+
     <div class="alert alert-warning">
       <strong>⚠️ Limite do Discord</strong>
-      O Discord permite renomear um canal no máximo 2 vezes por 10 minutos. Por isso o bot atualiza em intervalos de 10 minutos para não ser bloqueado pela API. Se usar <code>/stats atualizar</code> seguidas vezes, algumas atualizações podem ser ignoradas.
+      O Discord só permite renomear um canal 2 vezes por 10 minutos. Por isso o bot atualiza nesse intervalo. Se usar <code>/stats atualizar</code> várias vezes seguidas, o Discord pode ignorar algumas — isso é normal.
     </div>
   </section>
 
@@ -1136,13 +1152,13 @@ t<!DOCTYPE html>
       <details class="check-group">
         <summary>📊 Canais de Estatísticas</summary>
         <div class="check-body">
-          <div class="check-item"><input type="checkbox" id="c14a"><label for="c14a">Crie uma categoria chamada <code>📊 Servidor</code> e 2 canais de voz dentro dela com nomes provisórios</label></div>
-          <div class="check-item"><input type="checkbox" id="c14b"><label for="c14b">Use <code>/stats criar tipo:membros canal:[canal de voz 1]</code> → o canal deve ser renomeado para <code>👥 Membros: X</code> na hora</label></div>
-          <div class="check-item"><input type="checkbox" id="c14c"><label for="c14c">Use <code>/stats criar tipo:canais canal:[canal de voz 2]</code> → o canal deve ser renomeado para <code>📢 Canais: X</code></label></div>
-          <div class="check-item"><input type="checkbox" id="c14d"><label for="c14d">Use <code>/stats lista</code> → os dois canais aparecem com seus tipos e formatos</label></div>
-          <div class="check-item"><input type="checkbox" id="c14e"><label for="c14e">Use <code>/stats criar tipo:membros canal:[canal 1] formato:🌍 Comunidade: {value}</code> → o nome do canal muda para o formato personalizado</label></div>
-          <div class="check-item"><input type="checkbox" id="c14f"><label for="c14f">Use <code>/stats atualizar</code> → confirme que todos os canais são atualizados imediatamente</label></div>
-          <div class="check-item"><input type="checkbox" id="c14g"><label for="c14g">Use <code>/stats remover tipo:canais</code> → o canal deixa de ser atualizado mas continua existindo</label></div>
+          <div class="check-item"><input type="checkbox" id="c14a"><label for="c14a">Use <code>/stats criar tipo:membros</code> — o bot cria o canal de voz sozinho com o nome <code>👥 Membros: X</code> já atualizado</label></div>
+          <div class="check-item"><input type="checkbox" id="c14b"><label for="c14b">Crie uma categoria <code>📊 Servidor</code> no Discord, depois use <code>/stats criar tipo:canais categoria:#📊-servidor</code> — o canal aparece dentro da categoria</label></div>
+          <div class="check-item"><input type="checkbox" id="c14c"><label for="c14c">Use <code>/stats criar tipo:boosts formato:🚀 Boosts: {value}</code> → canal criado com formato personalizado</label></div>
+          <div class="check-item"><input type="checkbox" id="c14d"><label for="c14d">Use <code>/stats criar tipo:tickets</code> → canal mostra quantos tickets estão abertos agora</label></div>
+          <div class="check-item"><input type="checkbox" id="c14e"><label for="c14e">Use <code>/stats lista</code> → todos os canais criados aparecem com seus tipos</label></div>
+          <div class="check-item"><input type="checkbox" id="c14f"><label for="c14f">Use <code>/stats atualizar</code> → todos os canais atualizam o número na hora</label></div>
+          <div class="check-item"><input type="checkbox" id="c14g"><label for="c14g">Use <code>/stats remover tipo:membros</code> → o canal de voz some do servidor automaticamente</label></div>
         </div>
       </details>
 
