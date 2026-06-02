@@ -1,6 +1,6 @@
 // URL base da API — aponta para o bot no Discloud
 // Para testar local: abra o console do navegador e escreva: window.API_URL = "http://localhost:3000"
-const API_URL = window.API_URL ?? "https://discord-admin-bot.discloud.app";
+const API_URL = window.API_URL ?? "https://bot-ticket-xgmj.onrender.com";
 
 // ── Token JWT ──────────────────────────────────────────────────────────────
 
