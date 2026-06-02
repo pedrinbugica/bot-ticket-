@@ -28,6 +28,12 @@ import { registerLevelingEvents } from "./leveling/leveling.js";
 import { registerTagEvents } from "./tags/tags.js";
 import { registerStarboardEvents } from "./starboard/starboard.js";
 import { startStatsJob } from "./jobs/stats.js";
+import { registerCountingEvents } from "./counting/counting.js";
+import { registerJtcEvents } from "./jtc/jtc.js";
+import { startBirthdaysJob } from "./jobs/birthdays.js";
+import { startScheduledJob } from "./jobs/scheduled.js";
+import { startVoiceXpJob } from "./jobs/voiceXp.js";
+import { startApiServer } from "./api/server.js";
 
 const client = new Client({
   intents: [
@@ -37,6 +43,7 @@ const client = new Client({
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.GuildVoiceStates,
   ],
   partials: [Partials.Channel, Partials.Message, Partials.Reaction, Partials.User],
 });
@@ -49,6 +56,8 @@ registerAutomodEvents(client);
 registerLevelingEvents(client);
 registerTagEvents(client);
 registerStarboardEvents(client);
+registerCountingEvents(client);
+registerJtcEvents(client);
 
 client.once(Events.ClientReady, async (readyClient) => {
   console.log(`Conectado como ${readyClient.user.tag}`);
@@ -59,6 +68,10 @@ client.once(Events.ClientReady, async (readyClient) => {
   startGiveawayJob(readyClient);
   startPollsJob(readyClient);
   startStatsJob(readyClient);
+  startBirthdaysJob(readyClient);
+  startScheduledJob(readyClient);
+  startVoiceXpJob(readyClient);
+  startApiServer(readyClient);
 
   const rest = new REST({ version: "10" }).setToken(env.token);
   setImmediate(() => {
