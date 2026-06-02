@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configuração de Tickets — Bot Admin</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="content">
+    <div class="topbar">
+      <h2>🎫 Configuração de Tickets</h2>
+      <div class="user-info"><img class="avatar" id="userAvatar" src="" alt="" /><span id="username"></span></div>
+    </div>
+    <div id="content"><div class="spinner"></div></div>
+  </main>
+</div>
+<script type="module">
+  import { isLoggedIn, getModules, patchModule, getStoredGuild, logout } from "./js/api.js";
+  import { sidebarHTML } from "./js/sidebar.js";
+
+  if (!isLoggedIn()) { window.location.href = "/index.html"; }
+  const guildId = getStoredGuild();
+  if (!guildId) { window.location.href = "/guilds.html"; }
+  document.getElementById("sidebar").innerHTML = sidebarHTML();
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  document.getElementById("changeGuildBtn")?.addEventListener("click", () => window.location.href = "/guilds.html");
+  document.querySelectorAll("nav.sidebar a[data-page]").forEach((a) => { if (a.dataset.page === "tickets") a.classList.add("active"); });
+
+  async function load() {
+    try {
+      const data = await getModules(guildId);
+      const t = data.tickets ?? {};
+
+      const supportRoles = (() => {
+        try { return JSON.parse(t.support_role_ids ?? "[]").join(", "); } catch { return ""; }
+      })();
+      const colorHex = t.panel_color
+        ? "#" + t.panel_color.toString(16).padStart(6, "0")
+        : "#5865f2";
+
+      document.getElementById("content").innerHTML = `
+        <div class="card" style="max-width:680px;margin-bottom:16px">
+          <div class="section-header"><h3>Configurações gerais</h3></div>
+          <div class="form-group"><label>ID da categoria (onde os tickets são criados)</label>
+            <input class="form-control" id="tCategory" value="${t.ticket_category_id ?? ""}" placeholder="ID da categoria do Discord" /></div>
+          <div class="form-group"><label>IDs dos cargos de suporte (separados por vírgula)</label>
+            <input class="form-control" id="tRoles" value="${supportRoles}" placeholder="ID1, ID2, ..." /></div>
+          <div class="form-group"><label>Fechar por inatividade em horas (deixe vazio para desativar)</label>
+            <input class="form-control" type="number" id="tInactivity" value="${t.inactivity_hours ?? ""}" placeholder="Ex: 24" min="1" /></div>
+          <div class="form-group" style="display:flex;align-items:center;gap:10px">
+            <input type="checkbox" id="tDmClose" ${t.send_dm_on_close ? "checked" : ""} style="width:18px;height:18px;cursor:pointer;flex-shrink:0" />
+            <label for="tDmClose" style="margin:0;cursor:pointer">Enviar DM ao usuário quando o ticket for fechado</label>
+          </div>
+        </div>
+
+        <div class="card" style="max-width:680px">
+          <div class="section-header"><h3>Aparência do painel</h3></div>
+          <div class="alert alert-info" style="margin-bottom:16px">
+            Use <code>/ticket painel</code> no Discord para enviar o painel num canal com essas configurações.
+          </div>
+          <div class="form-group"><label>Título do painel</label>
+            <input class="form-control" id="tTitle" value="${t.panel_title ?? "Central de atendimento"}" placeholder="Central de atendimento" /></div>
+          <div class="form-group"><label>Descrição do painel</label>
+            <textarea class="form-control" id="tDesc" rows="3" placeholder="Clique no botão abaixo para abrir um ticket.">${t.panel_description ?? ""}</textarea></div>
+          <div class="form-group"><label>Rodapé do painel</label>
+            <input class="form-control" id="tFooter" value="${t.panel_footer ?? ""}" placeholder="Texto do rodapé (opcional)" /></div>
+          <div class="form-group"><label>Regras exibidas ao abrir um ticket</label>
+            <textarea class="form-control" id="tRules" rows="4" placeholder="Regras do servidor...">${t.panel_rules ?? ""}</textarea></div>
+          <div class="grid grid-2" style="gap:12px">
+            <div class="form-group"><label>Cor do embed</label>
+              <input type="color" id="tColor" value="${colorHex}" style="width:100%;height:40px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-card);cursor:pointer;padding:2px" /></div>
+            <div class="form-group"><label>URL da imagem do painel</label>
+              <input class="form-control" id="tImage" value="${t.panel_image_url ?? ""}" placeholder="https://..." /></div>
+          </div>
+          <button class="btn btn-primary" id="saveBtn">Salvar alterações</button>
+          <span id="saveMsg" style="font-size:13px;color:var(--green);margin-left:10px;display:none">✅ Salvo!</span>
+          <span id="saveErr" style="font-size:13px;color:var(--red);margin-left:10px;display:none"></span>
+        </div>
+      `;
+
+      document.getElementById("saveBtn").addEventListener("click", async () => {
+        const btn = document.getElementById("saveBtn");
+        const msgEl = document.getElementById("saveMsg");
+        const errEl = document.getElementById("saveErr");
+        btn.disabled = true; btn.textContent = "Salvando...";
+        msgEl.style.display = "none"; errEl.style.display = "none";
+
+        try {
+          const roles = document.getElementById("tRoles").value
+            .split(",").map((s) => s.trim()).filter(Boolean);
+          const colorRaw = document.getElementById("tColor").value.replace("#", "");
+          const colorNum = parseInt(colorRaw, 16);
+          const inactivity = document.getElementById("tInactivity").value;
+
+          await patchModule(guildId, "tickets", {
+            ticket_category_id: document.getElementById("tCategory").value || null,
+            support_role_ids: roles,
+            panel_title: document.getElementById("tTitle").value || null,
+            panel_description: document.getElementById("tDesc").value || null,
+            panel_footer: document.getElementById("tFooter").value || null,
+            panel_rules: document.getElementById("tRules").value || null,
+            panel_color: isNaN(colorNum) ? null : colorNum,
+            panel_image_url: document.getElementById("tImage").value || null,
+            inactivity_hours: inactivity ? Number(inactivity) : null,
+            send_dm_on_close: document.getElementById("tDmClose").checked ? 1 : null,
+          });
+
+          msgEl.style.display = "inline";
+          setTimeout(() => { msgEl.style.display = "none"; }, 3000);
+        } catch (err) {
+          errEl.textContent = err.message;
+          errEl.style.display = "inline";
+        } finally {
+          btn.disabled = false; btn.textContent = "Salvar alterações";
+        }
+      });
+
+    } catch (err) {
+      document.getElementById("content").innerHTML = `<div class="alert alert-danger">Erro: ${err.message}</div>`;
+    }
+  }
+  load();
+</script>
+</body>
+</html>

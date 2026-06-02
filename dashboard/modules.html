@@ -39,15 +39,15 @@
   });
 
   const MODULES = [
-    { key: "tickets",   icon: "🎫", name: "Tickets",       page: null,                 check: (d) => !!d.tickets },
+    { key: "tickets",   icon: "🎫", name: "Tickets",       page: "module-tickets.html", check: (d) => !!d.tickets },
     { key: "welcome",   icon: "👋", name: "Boas-vindas",   page: "module-welcome.html", check: (d) => !!d.welcome?.welcome_channel_id },
     { key: "logs",      icon: "📋", name: "Logs",          page: "module-logs.html",    check: (d) => !!d.logs?.log_channel_id },
     { key: "automod",   icon: "🛡️", name: "Auto-mod",      page: "module-automod.html", check: (d) => !!(d.automod?.word_filter_enabled || d.automod?.spam_enabled || d.automod?.link_filter_enabled) },
     { key: "leveling",  icon: "⭐", name: "XP/Níveis",     page: "leveling.html",       check: (d) => !!d.leveling?.enabled },
-    { key: "starboard", icon: "⭐", name: "Starboard",     page: null,                  check: (d) => !!d.starboard?.enabled },
-    { key: "jtc",       icon: "🎮", name: "Join-to-Create",page: null,                  check: (d) => !!d.jtc },
-    { key: "birthdays", icon: "🎂", name: "Aniversários",  page: "birthdays.html",      check: (d) => !!d.birthdays?.channel_id },
-    { key: "counting",  icon: "🔢", name: "Counting",      page: null,                  check: (d) => !!d.counting?.channel_id },
+    { key: "starboard", icon: "⭐", name: "Starboard",     page: "module-starboard.html", check: (d) => !!d.starboard?.enabled },
+    { key: "jtc",       icon: "🎮", name: "Join-to-Create",page: "module-jtc.html",      check: (d) => !!d.jtc },
+    { key: "birthdays", icon: "🎂", name: "Aniversários",  page: "birthdays.html",       check: (d) => !!d.birthdays?.channel_id },
+    { key: "counting",  icon: "🔢", name: "Counting",      page: "module-counting.html", check: (d) => !!d.counting?.channel_id },
     { key: "tags",      icon: "💬", name: "Tags",          page: "tags.html",           check: () => true },
     { key: "giveaways", icon: "🎉", name: "Sorteios",      page: "giveaways.html",      check: () => true },
     { key: "polls",     icon: "📊", name: "Enquetes",      page: "polls.html",          check: () => true },

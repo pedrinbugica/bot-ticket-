@@ -297,3 +297,38 @@ export async function addReactionRole(guildId, data) {
 export async function deleteReactionRole(guildId, id) {
   return apiFetch(`/api/guilds/${guildId}/modules/roles/reaction-roles/${id}`, { method: "DELETE" });
 }
+
+// ── Sorteios (criação e encerramento) ──────────────────────────────────────
+
+export async function createGiveaway(guildId, data) {
+  return apiFetch(`/api/guilds/${guildId}/content/giveaways`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function endGiveaway(guildId, id) {
+  return apiFetch(`/api/guilds/${guildId}/content/giveaways/${id}`, { method: "DELETE" });
+}
+
+// ── Enquetes (criação e encerramento) ──────────────────────────────────────
+
+export async function createPoll(guildId, data) {
+  return apiFetch(`/api/guilds/${guildId}/content/polls`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function endPoll(guildId, id) {
+  return apiFetch(`/api/guilds/${guildId}/content/polls/${id}`, { method: "DELETE" });
+}
+
+// ── Embed Builder ──────────────────────────────────────────────────────────
+
+export async function createEmbed(guildId, data) {
+  return apiFetch(`/api/guilds/${guildId}/content/embed`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}

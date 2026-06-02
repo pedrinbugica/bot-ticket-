@@ -18,7 +18,7 @@
   </main>
 </div>
 <script type="module">
-  import { isLoggedIn, getPolls, getStoredGuild, logout } from "./js/api.js";
+  import { isLoggedIn, getPolls, createPoll, endPoll, getStoredGuild, logout } from "./js/api.js";
   import { sidebarHTML } from "./js/sidebar.js";
   import { formatDate } from "./js/layout.js";
 
@@ -34,7 +34,25 @@
     try {
       const { active, ended } = await getPolls(guildId);
       document.getElementById("content").innerHTML = `
-        <div class="alert alert-info">Para criar enquetes, use <code>/enquete criar</code> no Discord.</div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="section-header"><h3>Criar enquete</h3></div>
+          <div class="form-group"><label>Canal (ID)</label>
+            <input class="form-control" id="pChannelId" placeholder="Cole o ID do canal aqui" /></div>
+          <div class="form-group"><label>Pergunta</label>
+            <input class="form-control" id="pQuestion" placeholder="Qual é a sua pergunta?" /></div>
+          <div class="form-group"><label>Opções (mínimo 2, máximo 5)</label>
+            <input class="form-control" id="pOpt1" placeholder="Opção 1" style="margin-bottom:6px" />
+            <input class="form-control" id="pOpt2" placeholder="Opção 2" style="margin-bottom:6px" />
+            <input class="form-control" id="pOpt3" placeholder="Opção 3 (opcional)" style="margin-bottom:6px" />
+            <input class="form-control" id="pOpt4" placeholder="Opção 4 (opcional)" style="margin-bottom:6px" />
+            <input class="form-control" id="pOpt5" placeholder="Opção 5 (opcional)" /></div>
+          <div class="form-group"><label>Duração (opcional — padrão: 7 dias)</label>
+            <input class="form-control" id="pDuration" placeholder="Ex: 30m, 1h, 2d" /></div>
+          <button class="btn btn-primary" id="createPollBtn">📊 Criar enquete</button>
+          <span id="pMsg" style="font-size:13px;color:var(--green);margin-left:10px;display:none">✅ Enquete criada!</span>
+          <span id="pErr" style="font-size:13px;color:var(--red);margin-left:10px;display:none"></span>
+        </div>
+
         <div class="card" style="margin-bottom:16px">
           <div class="section-header"><h3>Enquetes ativas (${active.length})</h3></div>
           ${active.length === 0
@@ -43,8 +61,13 @@
                 const total = p.voteCounts.reduce((a, b) => a + b, 0);
                 const maxVotes = Math.max(...p.voteCounts, 1);
                 return `<div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">
-                  <strong style="color:#fff">${p.question}</strong>
-                  <div style="font-size:12px;color:var(--muted);margin:4px 0 10px">Encerra: ${formatDate(p.ends_at)} — ${total} votos</div>
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+                    <div>
+                      <strong style="color:#fff">${p.question}</strong>
+                      <div style="font-size:12px;color:var(--muted);margin:4px 0 10px">Encerra: ${formatDate(p.ends_at)} — ${total} votos</div>
+                    </div>
+                    <button class="btn btn-danger btn-sm" onclick="window.endPollNow(${p.id})">Encerrar</button>
+                  </div>
                   ${p.options.map((opt, i) => `
                     <div style="margin-bottom:8px">
                       <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
@@ -57,6 +80,7 @@
                 </div>`;
               }).join("")}
         </div>
+
         <div class="card">
           <div class="section-header"><h3>Encerradas recentemente</h3></div>
           ${ended.length === 0
@@ -67,6 +91,45 @@
               </table></div>`}
         </div>
       `;
+
+      document.getElementById("createPollBtn").addEventListener("click", async () => {
+        const btn = document.getElementById("createPollBtn");
+        const channelId = document.getElementById("pChannelId").value.trim();
+        const question = document.getElementById("pQuestion").value.trim();
+        const opcoes = [1,2,3,4,5].map(i => document.getElementById(`pOpt${i}`).value.trim()).filter(Boolean);
+        const duracao = document.getElementById("pDuration").value.trim();
+        const errEl = document.getElementById("pErr");
+        const msgEl = document.getElementById("pMsg");
+
+        errEl.style.display = "none";
+        msgEl.style.display = "none";
+
+        if (!channelId || !question || opcoes.length < 2) {
+          errEl.textContent = "Preencha canal, pergunta e ao menos 2 opções.";
+          errEl.style.display = "inline";
+          return;
+        }
+
+        btn.disabled = true; btn.textContent = "Criando...";
+        try {
+          await createPoll(guildId, { channelId, question, opcoes, duracao: duracao || null });
+          msgEl.style.display = "inline";
+          setTimeout(() => load(), 1500);
+        } catch (err) {
+          errEl.textContent = err.message;
+          errEl.style.display = "inline";
+          btn.disabled = false; btn.textContent = "📊 Criar enquete";
+        }
+      });
+
+      window.endPollNow = async (id) => {
+        if (!confirm("Encerrar esta enquete e mostrar resultado no Discord?")) return;
+        try {
+          await endPoll(guildId, id);
+          load();
+        } catch (err) { alert("Erro: " + err.message); }
+      };
+
     } catch (err) {
       document.getElementById("content").innerHTML = `<div class="alert alert-danger">Erro: ${err.message}</div>`;
     }

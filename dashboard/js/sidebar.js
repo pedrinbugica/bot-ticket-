@@ -24,6 +24,7 @@ export function sidebarHTML(guildName = "") {
   <a href="/roles.html" data-page="roles"><span class="icon">🏷️</span> Cargos e Roles</a>
 
   <span class="nav-group">Conteúdo</span>
+  <a href="/embed.html" data-page="embed"><span class="icon">✏️</span> Embed Builder</a>
   <a href="/tags.html" data-page="tags"><span class="icon">💬</span> Tags</a>
   <a href="/giveaways.html" data-page="giveaways"><span class="icon">🎉</span> Sorteios</a>
   <a href="/polls.html" data-page="polls"><span class="icon">📊</span> Enquetes</a>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Embed Builder — Bot Admin</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="content">
+    <div class="topbar">
+      <h2>✏️ Embed Builder</h2>
+      <div class="user-info"><img class="avatar" id="userAvatar" src="" alt="" /><span id="username"></span></div>
+    </div>
+
+    <div id="content" style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
+      <div class="card" style="flex:1;min-width:300px">
+        <div class="section-header"><h3>Configurar embed</h3></div>
+        <div class="form-group"><label>Canal (ID)</label>
+          <input class="form-control" id="eChannelId" placeholder="Cole o ID do canal aqui" /></div>
+        <div class="form-group"><label>Título *</label>
+          <input class="form-control" id="eTitulo" placeholder="Título do embed" maxlength="256" /></div>
+        <div class="form-group"><label>Descrição *</label>
+          <textarea class="form-control" id="eDescricao" rows="5" placeholder="Conteúdo do embed..." maxlength="4000"></textarea></div>
+        <div class="grid grid-2" style="gap:12px">
+          <div class="form-group"><label>Cor</label>
+            <input type="color" id="eCor" value="#5865f2" style="width:100%;height:40px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-card);cursor:pointer;padding:2px" /></div>
+          <div class="form-group"><label>Rodapé (opcional)</label>
+            <input class="form-control" id="eRodape" placeholder="Texto do rodapé" /></div>
+        </div>
+        <div class="form-group"><label>URL da imagem (opcional)</label>
+          <input class="form-control" id="eImagem" placeholder="https://..." /></div>
+        <button class="btn btn-primary" id="sendEmbedBtn" style="width:100%">✉️ Enviar embed</button>
+        <div id="eMsg" style="margin-top:10px;display:none"></div>
+      </div>
+
+      <div style="flex:1;min-width:280px;display:flex;flex-direction:column;gap:16px">
+        <div class="card">
+          <div class="section-header"><h3>Pré-visualização</h3></div>
+          <div id="previewArea" style="border-left:4px solid #5865f2;background:var(--bg);padding:12px 14px;border-radius:0 var(--radius) var(--radius) 0">
+            <div id="prevTitulo" style="font-weight:700;color:#fff;margin-bottom:6px;font-size:15px">Título do embed</div>
+            <div id="prevDescricao" style="font-size:14px;color:var(--text);white-space:pre-wrap">Conteúdo do embed...</div>
+            <div id="prevImagem" style="display:none;margin-top:8px"><img id="prevImg" src="" alt="" style="max-width:100%;border-radius:4px" /></div>
+            <div id="prevRodape" style="font-size:12px;color:var(--muted);margin-top:8px;border-top:1px solid var(--border);padding-top:6px;display:none"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-header"><h3>Como obter o ID do canal</h3></div>
+          <p style="font-size:13px;color:var(--muted);line-height:1.7">
+            1. No Discord, vá em <strong style="color:var(--text)">Configurações → Avançado</strong> e ative o <strong style="color:var(--text)">Modo Desenvolvedor</strong>.<br>
+            2. Clique com o botão direito no canal desejado e selecione <strong style="color:var(--text)">Copiar ID</strong>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script type="module">
+  import { isLoggedIn, createEmbed, getStoredGuild, logout } from "./js/api.js";
+  import { sidebarHTML } from "./js/sidebar.js";
+
+  if (!isLoggedIn()) { window.location.href = "/index.html"; }
+  const guildId = getStoredGuild();
+  if (!guildId) { window.location.href = "/guilds.html"; }
+  document.getElementById("sidebar").innerHTML = sidebarHTML();
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  document.getElementById("changeGuildBtn")?.addEventListener("click", () => window.location.href = "/guilds.html");
+  document.querySelectorAll("nav.sidebar a[data-page]").forEach((a) => { if (a.dataset.page === "embed") a.classList.add("active"); });
+
+  function updatePreview() {
+    const titulo = document.getElementById("eTitulo").value || "Título do embed";
+    const descricao = document.getElementById("eDescricao").value || "Conteúdo do embed...";
+    const cor = document.getElementById("eCor").value;
+    const rodape = document.getElementById("eRodape").value.trim();
+    const imagem = document.getElementById("eImagem").value.trim();
+
+    document.getElementById("prevTitulo").textContent = titulo;
+    document.getElementById("prevDescricao").textContent = descricao;
+    document.getElementById("previewArea").style.borderLeftColor = cor;
+
+    const imgEl = document.getElementById("prevImagem");
+    if (imagem) {
+      document.getElementById("prevImg").src = imagem;
+      imgEl.style.display = "block";
+    } else {
+      imgEl.style.display = "none";
+    }
+
+    const rodapeEl = document.getElementById("prevRodape");
+    if (rodape) {
+      rodapeEl.textContent = rodape;
+      rodapeEl.style.display = "block";
+    } else {
+      rodapeEl.style.display = "none";
+    }
+  }
+
+  ["eTitulo", "eDescricao", "eCor", "eRodape", "eImagem"].forEach((id) => {
+    document.getElementById(id).addEventListener("input", updatePreview);
+  });
+
+  document.getElementById("sendEmbedBtn").addEventListener("click", async () => {
+    const btn = document.getElementById("sendEmbedBtn");
+    const msgEl = document.getElementById("eMsg");
+    const channelId = document.getElementById("eChannelId").value.trim();
+    const titulo = document.getElementById("eTitulo").value.trim();
+    const descricao = document.getElementById("eDescricao").value.trim();
+    const cor = document.getElementById("eCor").value;
+    const rodape = document.getElementById("eRodape").value.trim();
+    const imagem = document.getElementById("eImagem").value.trim();
+
+    msgEl.style.display = "none";
+
+    if (!channelId || !titulo || !descricao) {
+      msgEl.innerHTML = '<div class="alert alert-danger">Preencha canal, título e descrição.</div>';
+      msgEl.style.display = "block";
+      return;
+    }
+
+    btn.disabled = true; btn.textContent = "Enviando...";
+    try {
+      await createEmbed(guildId, {
+        channelId,
+        titulo,
+        descricao,
+        cor,
+        rodape: rodape || null,
+        imagem: imagem || null,
+      });
+      msgEl.innerHTML = '<div class="alert alert-info">✅ Embed enviado com sucesso!</div>';
+      msgEl.style.display = "block";
+    } catch (err) {
+      msgEl.innerHTML = `<div class="alert alert-danger">Erro: ${err.message}</div>`;
+      msgEl.style.display = "block";
+    } finally {
+      btn.disabled = false; btn.textContent = "✉️ Enviar embed";
+    }
+  });
+</script>
+</body>
+</html>
