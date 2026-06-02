@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Documentação — Bot Admin</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .cmd-card { margin-bottom:14px }
+    .cmd-header { display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap }
+    .cmd-name { font-size:16px;font-weight:700;font-family:monospace;color:var(--accent,#5865f2) }
+    .perm { font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px }
+    .perm-admin { background:#ed4245;color:#fff }
+    .perm-mod { background:#faa81a;color:#fff }
+    .perm-manage { background:#5865f2;color:#fff }
+    .perm-all { background:var(--bg-secondary);color:var(--text-muted) }
+    .cat-label { font-size:11px;color:var(--text-muted);margin-left:auto }
+    .cmd-desc { font-size:13px;color:var(--text-muted);margin-bottom:10px }
+    .sub table { width:100%;font-size:12px;border-collapse:collapse }
+    .sub td { padding:5px 8px;border-bottom:1px solid var(--border,#2e3035);vertical-align:top }
+    .sub tr:last-child td { border-bottom:none }
+    .sub td:first-child { white-space:nowrap;font-family:monospace;color:var(--text) }
+    .sub td:nth-child(2) { white-space:nowrap;color:var(--text-muted) }
+    .sub td:last-child { color:var(--text-muted) }
+    code.req { font-size:11px;background:var(--bg-secondary);padding:1px 5px;border-radius:4px;color:var(--text) }
+    code.opt { font-size:11px;background:var(--bg-secondary);padding:1px 5px;border-radius:4px;color:var(--text-muted);opacity:.7 }
+    .docs-section { margin-bottom:32px }
+    .docs-section > h3 { font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border,#2e3035) }
+    #docsSearch { max-width:420px;margin-bottom:20px }
+    .filter-pills { display:flex;gap:6px;flex-wrap:wrap;margin-bottom:24px }
+    .tip { font-size:12px;background:var(--bg-secondary);padding:8px 12px;border-radius:6px;color:var(--text-muted);margin-bottom:20px }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="content">
+    <div class="topbar">
+      <h2>📚 Documentação</h2>
+      <div class="user-info"><img class="avatar" id="userAvatar" src="" alt="" /><span id="username"></span></div>
+    </div>
+    <div id="content">
+
+      <input class="form-control" id="docsSearch" placeholder="🔍 Buscar comando... (ex: ban, sorteio, xp)" />
+
+      <div class="filter-pills">
+        <button class="btn btn-primary btn-sm filter-pill active" data-cat="all">Todos</button>
+        <button class="btn btn-ghost btn-sm filter-pill" data-cat="mod">🔨 Moderação</button>
+        <button class="btn btn-ghost btn-sm filter-pill" data-cat="tickets">🎫 Tickets</button>
+        <button class="btn btn-ghost btn-sm filter-pill" data-cat="xp">⭐ XP e Níveis</button>
+        <button class="btn btn-ghost btn-sm filter-pill" data-cat="cargos">🏷️ Cargos</button>
+        <button class="btn btn-ghost btn-sm filter-pill" data-cat="conteudo">💬 Conteúdo</button>
+        <button class="btn btn-ghost btn-sm filter-pill" data-cat="config">⚙️ Configuração</button>
+      </div>
+
+      <div class="tip">💡 Os parâmetros em <code class="req">azul</code> são obrigatórios e em <code class="opt">[cinza]</code> são opcionais.</div>
+
+      <!-- MODERAÇÃO -->
+      <div class="docs-section" data-cat="mod">
+        <h3>🔨 Moderação</h3>
+
+        <div class="cmd-card card" data-search="mod warn mute kick ban tempban unban purge slowmode historico casos remover moderacao">
+          <div class="cmd-header">
+            <span class="cmd-name">/mod</span>
+            <span class="perm perm-mod">Moderador</span>
+          </div>
+          <p class="cmd-desc">Ações de moderação do servidor. O bot escala punições automaticamente: ao 3º aviso aplica mute de 1h; ao 5º, kick.</p>
+          <div class="sub"><table>
+            <tr><td>/mod warn</td><td><code class="req">@usuario</code> <code class="opt">[motivo]</code></td><td>Aplica um aviso</td></tr>
+            <tr><td>/mod mute</td><td><code class="req">@usuario</code> <code class="req">duração</code> <code class="opt">[motivo]</code></td><td>Silencia por tempo (10m, 1h, 2d — máx. 28d)</td></tr>
+            <tr><td>/mod kick</td><td><code class="req">@usuario</code> <code class="opt">[motivo]</code></td><td>Expulsa do servidor</td></tr>
+            <tr><td>/mod ban</td><td><code class="req">@usuario</code> <code class="opt">[motivo]</code> <code class="opt">[apagar_mensagens 0-7]</code></td><td>Bane permanentemente</td></tr>
+            <tr><td>/mod tempban</td><td><code class="req">@usuario</code> <code class="req">duração</code> <code class="opt">[motivo]</code></td><td>Bane por tempo (máx. 365d) — desbanido automaticamente</td></tr>
+            <tr><td>/mod unban</td><td><code class="req">usuario_id</code> <code class="opt">[motivo]</code></td><td>Desbane pelo ID numérico do usuário</td></tr>
+            <tr><td>/mod historico</td><td><code class="req">@usuario</code></td><td>Histórico de infrações de um membro</td></tr>
+            <tr><td>/mod casos</td><td>—</td><td>Lista os casos recentes do servidor</td></tr>
+            <tr><td>/mod remover</td><td><code class="req">caso</code></td><td>Inativa um caso de infração pelo número</td></tr>
+            <tr><td>/mod purge</td><td><code class="req">quantidade</code> <code class="opt">[@usuario]</code></td><td>Apaga mensagens em massa (máx. 100, últimos 14 dias)</td></tr>
+            <tr><td>/mod slowmode</td><td><code class="req">#canal</code> <code class="req">duração</code></td><td>Modo lento no canal (0 = desativar, máx. 6h)</td></tr>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- TICKETS -->
+      <div class="docs-section" data-cat="tickets">
+        <h3>🎫 Tickets</h3>
+
+        <div class="cmd-card card" data-search="ticket-painel painel atendimento abrir tickets admin">
+          <div class="cmd-header">
+            <span class="cmd-name">/ticket-painel</span>
+            <span class="perm perm-admin">Admin</span>
+          </div>
+          <p class="cmd-desc">Envia o painel de abertura de tickets no canal atual. Membros clicam no botão para abrir atendimento.</p>
+        </div>
+
+        <div class="cmd-card card" data-search="ticket add remove stats adicionar remover membro">
+          <div class="cmd-header">
+            <span class="cmd-name">/ticket</span>
+            <span class="perm perm-all">Todos</span>
+          </div>
+          <p class="cmd-desc">Ações dentro de um ticket já aberto.</p>
+          <div class="sub"><table>
+            <tr><td>/ticket add</td><td><code class="req">@usuario</code></td><td>Adiciona um membro ao ticket atual</td></tr>
+            <tr><td>/ticket remove</td><td><code class="req">@usuario</code></td><td>Remove um membro do ticket atual</td></tr>
+            <tr><td>/ticket stats</td><td>—</td><td>Estatísticas de tickets do servidor</td></tr>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- XP E NÍVEIS -->
+      <div class="docs-section" data-cat="xp">
+        <h3>⭐ XP e Níveis</h3>
+
+        <div class="cmd-card card" data-search="nivel xp nível rank">
+          <div class="cmd-header">
+            <span class="cmd-name">/nivel</span>
+            <span class="perm perm-all">Todos</span>
+          </div>
+          <p class="cmd-desc">Exibe o nível, XP atual e posição no ranking de um membro.</p>
+          <div class="sub"><table>
+            <tr><td>/nivel</td><td><code class="opt">[@usuario]</code></td><td>Padrão: você mesmo</td></tr>
+          </table></div>
+        </div>
+
+        <div class="cmd-card card" data-search="top ranking leaderboard xp">
+          <div class="cmd-header">
+            <span class="cmd-name">/top</span>
+            <span class="perm perm-all">Todos</span>
+          </div>
+          <p class="cmd-desc">Exibe o ranking de XP do servidor com pódio dos top 3.</p>
+          <div class="sub"><table>
+            <tr><td>/top</td><td><code class="opt">[pagina]</code></td><td>Página do ranking (padrão: 1, 10 membros por página)</td></tr>
+          </table></div>
+        </div>
+
+        <div class="cmd-card card" data-search="xp reset config recompensa voz multiplicador canal cargo niveis leveling">
+          <div class="cmd-header">
+            <span class="cmd-name">/xp</span>
+            <span class="perm perm-manage">Gerenciar servidor</span>
+          </div>
+          <p class="cmd-desc">Gerencia o sistema de XP e níveis. Configurações básicas disponíveis também pelo painel web.</p>
+          <div class="sub"><table>
+            <tr><td>/xp reset</td><td><code class="req">@usuario</code></td><td>Zera o XP de um membro</td></tr>
+            <tr><td>/xp config</td><td><code class="opt">[ativar]</code> <code class="opt">[#canal]</code> <code class="opt">[xp_mensagem]</code> <code class="opt">[cooldown]</code></td><td>Configura o sistema. Sem parâmetros = ver config atual</td></tr>
+            <tr><td>/xp voz</td><td><code class="opt">[ativar]</code> <code class="opt">[xp_por_minuto]</code></td><td>XP por minuto em canais de voz (padrão: 10 XP/min)</td></tr>
+            <tr><td>/xp recompensa-adicionar</td><td><code class="req">nivel</code> <code class="req">@cargo</code></td><td>Entrega o cargo quando o membro atinge o nível</td></tr>
+            <tr><td>/xp recompensa-remover</td><td><code class="req">nivel</code></td><td>Remove a recompensa de cargo de um nível</td></tr>
+            <tr><td>/xp recompensas</td><td>—</td><td>Lista todos os cargos de recompensa configurados</td></tr>
+            <tr><td>/xp multiplicador-canal</td><td><code class="req">#canal</code> <code class="req">multiplicador</code></td><td>XP multiplicado neste canal (ex: 2 = dobro; 0 = remover)</td></tr>
+            <tr><td>/xp multiplicador-cargo</td><td><code class="req">@cargo</code> <code class="req">multiplicador</code></td><td>XP multiplicado para membros com este cargo (0 = remover)</td></tr>
+            <tr><td>/xp multiplicadores</td><td>—</td><td>Lista todos os multiplicadores ativos</td></tr>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- CARGOS -->
+      <div class="docs-section" data-cat="cargos">
+        <h3>🏷️ Cargos e Roles</h3>
+
+        <div class="cmd-card card" data-search="cargo menu dropdown selecionar opcao cargos role">
+          <div class="cmd-header">
+            <span class="cmd-name">/cargo-menu</span>
+            <span class="perm perm-manage">Gerenciar cargos</span>
+          </div>
+          <p class="cmd-desc">Cria menus dropdown em canais para os membros escolherem seus próprios cargos.</p>
+          <div class="sub"><table>
+            <tr><td>/cargo-menu criar</td><td><code class="req">#canal</code> <code class="req">titulo</code> <code class="opt">[descricao]</code> <code class="opt">[max_cargos]</code></td><td>Cria o menu no canal (max_cargos 0 = sem limite)</td></tr>
+            <tr><td>/cargo-menu opcao-adicionar</td><td><code class="req">menu_id</code> <code class="req">@cargo</code> <code class="opt">[label]</code> <code class="opt">[emoji]</code> <code class="opt">[descricao]</code></td><td>Adiciona uma opção ao menu</td></tr>
+            <tr><td>/cargo-menu opcao-remover</td><td><code class="req">menu_id</code> <code class="req">@cargo</code></td><td>Remove uma opção do menu</td></tr>
+            <tr><td>/cargo-menu remover</td><td><code class="req">menu_id</code></td><td>Remove o menu e sua mensagem do canal</td></tr>
+            <tr><td>/cargo-menu lista</td><td>—</td><td>Lista todos os menus do servidor com seus IDs</td></tr>
+          </table></div>
+        </div>
+
+        <div class="cmd-card card" data-search="reaction role emoji reacao cargo automatico">
+          <div class="cmd-header">
+            <span class="cmd-name">/reaction-role</span>
+            <span class="perm perm-manage">Gerenciar cargos</span>
+          </div>
+          <p class="cmd-desc">Associa emojis de reação em mensagens existentes a cargos. O membro ganha/perde o cargo ao reagir.</p>
+          <div class="sub"><table>
+            <tr><td>/reaction-role adicionar</td><td><code class="req">#canal</code> <code class="req">mensagem_id</code> <code class="req">emoji</code> <code class="req">@cargo</code></td><td>Cria a associação emoji → cargo</td></tr>
+            <tr><td>/reaction-role remover</td><td><code class="req">id</code></td><td>Remove a reaction role pelo ID (ver com /reaction-role lista)</td></tr>
+            <tr><td>/reaction-role lista</td><td>—</td><td>Lista todas as reaction roles do servidor</td></tr>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- CONTEÚDO -->
+      <div class="docs-section" data-cat="conteudo">
+        <h3>💬 Conteúdo</h3>
+
+        <div class="cmd-card card" data-search="tag resposta automatica prefixo criar editar lista">
+          <div class="cmd-header">
+            <span class="cmd-name">/tag</span>
+            <span class="perm perm-all">Todos</span>
+          </div>
+          <p class="cmd-desc">Respostas automáticas ativadas por prefixo no chat. Ex: digitar <code>!ajuda</code> envia a resposta configurada.</p>
+          <div class="sub"><table>
+            <tr><td>/tag criar</td><td><code class="req">nome</code> <code class="req">conteudo</code></td><td>Cria uma nova tag (máx. 2000 caracteres)</td></tr>
+            <tr><td>/tag editar</td><td><code class="req">nome</code> <code class="req">conteudo</code></td><td>Edita o conteúdo de uma tag existente</td></tr>
+            <tr><td>/tag remover</td><td><code class="req">nome</code></td><td>Remove a tag do servidor</td></tr>
+            <tr><td>/tag ver</td><td><code class="req">nome</code></td><td>Exibe o conteúdo de uma tag sem ativá-la</td></tr>
+            <tr><td>/tag lista</td><td>—</td><td>Lista todas as tags do servidor</td></tr>
+            <tr><td>/tag prefixo</td><td><code class="req">prefixo</code></td><td>Muda o prefixo de ativação (padrão: !, máx. 5 chars)</td></tr>
+          </table></div>
+        </div>
+
+        <div class="cmd-card card" data-search="enquete votação votar opcoes pergunta poll criar encerrar">
+          <div class="cmd-header">
+            <span class="cmd-name">/enquete</span>
+            <span class="perm perm-all">Todos</span>
+          </div>
+          <p class="cmd-desc">Cria enquetes com até 5 opções e barras de progresso em tempo real. Encerra automaticamente ao fim do prazo.</p>
+          <div class="sub"><table>
+            <tr><td>/enquete criar</td><td><code class="req">pergunta</code> <code class="req">opcao1</code> <code class="req">opcao2</code> <code class="opt">[opcao3-5]</code> <code class="opt">[duracao]</code> <code class="opt">[#canal]</code></td><td>Cria a enquete (duração padrão: 7d)</td></tr>
+            <tr><td>/enquete encerrar</td><td><code class="req">id</code></td><td>Encerra antecipadamente e exibe resultado final</td></tr>
+            <tr><td>/enquete lista</td><td>—</td><td>Lista todas as enquetes ativas</td></tr>
+          </table></div>
+        </div>
+
+        <div class="cmd-card card" data-search="sorteio giveaway prêmio vencedor reroll criar encerrar">
+          <div class="cmd-header">
+            <span class="cmd-name">/sorteio</span>
+            <span class="perm perm-all">Todos</span>
+          </div>
+          <p class="cmd-desc">Cria sorteios com botão de participação. Vencedores são escolhidos aleatoriamente ao fim do prazo.</p>
+          <div class="sub"><table>
+            <tr><td>/sorteio criar</td><td><code class="req">premio</code> <code class="req">duracao</code> <code class="opt">[vencedores]</code> <code class="opt">[#canal]</code></td><td>Cria o sorteio (máx. 30d, padrão: 1 vencedor)</td></tr>
+            <tr><td>/sorteio encerrar</td><td><code class="req">id</code></td><td>Encerra e anuncia os vencedores imediatamente</td></tr>
+            <tr><td>/sorteio reroll</td><td><code class="req">id</code> <code class="opt">[vencedores]</code></td><td>Sorteia novos vencedores para um sorteio já encerrado</td></tr>
+            <tr><td>/sorteio lista</td><td>—</td><td>Lista sorteios ativos com IDs</td></tr>
+          </table></div>
+        </div>
+
+        <div class="cmd-card card" data-search="embed builder mensagem customizada criar enviar">
+          <div class="cmd-header">
+            <span class="cmd-name">/embed</span>
+            <span class="perm perm-manage">Gerenciar mensagens</span>
+          </div>
+          <p class="cmd-desc">Abre um formulário visual para criar e enviar um embed customizado (título, descrição, cor, imagem, rodapé).</p>
+          <div class="sub"><table>
+            <tr><td>/embed</td><td><code class="opt">[#canal]</code></td><td>Canal de destino (padrão: canal atual)</td></tr>
+          </table></div>
+        </div>
+
+        <div class="cmd-card card" data-search="agendar mensagem agendada data hora programar criar cancelar">
+          <div class="cmd-header">
+            <span class="cmd-name">/agendar</span>
+            <span class="perm perm-manage">Gerenciar mensagens</span>
+          </div>
+          <p class="cmd-desc">Agenda mensagens para serem enviadas automaticamente em uma data e hora específicas.</p>
+          <div class="sub"><table>
+            <tr><td>/agendar criar</td><td><code class="req">#canal</code> <code class="req">mensagem</code> <code class="req">quando</code></td><td>Formato da data: DD/MM/AAAA HH:MM — ex: 25/12/2026 09:00</td></tr>
+            <tr><td>/agendar lista</td><td>—</td><td>Lista todas as mensagens agendadas com IDs</td></tr>
+            <tr><td>/agendar cancelar</td><td><code class="req">id</code></td><td>Cancela uma mensagem agendada antes de ser enviada</td></tr>
+          </table></div>
+        </div>
+
+        <div class="cmd-card card" data-search="aniversario aniversário parabéns registrar data nascimento">
+          <div class="cmd-header">
+            <span class="cmd-name">/aniversario</span>
+            <span class="perm perm-all">Todos (config: Gerenciar servidor)</span>
+          </div>
+          <p class="cmd-desc">Permite que membros registrem seus aniversários. O bot parabeniza automaticamente no dia certo.</p>
+          <div class="sub"><table>
+            <tr><td>/aniversario registrar</td><td><code class="req">dia</code> <code class="req">mes</code></td><td>Registra seu aniversário (apenas dia e mês, sem ano)</td></tr>
+            <tr><td>/aniversario remover</td><td>—</td><td>Remove seu aniversário do registro</td></tr>
+            <tr><td>/aniversario ver</td><td><code class="opt">[@usuario]</code></td><td>Vê o aniversário de um membro (padrão: você mesmo)</td></tr>
+            <tr><td>/aniversario configurar</td><td><code class="opt">[#canal]</code> <code class="opt">[mensagem]</code></td><td>Define onde e como o bot parabeniza. Use {usuario} na mensagem</td></tr>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- CONFIGURAÇÃO -->
+      <div class="docs-section" data-cat="config">
+        <h3>⚙️ Configuração</h3>
+
+        <div class="cmd-card card" data-search="configurar boas vindas logs canal eventos entrada saida ban mensagem dm cargo automatico">
+          <div class="cmd-header">
+            <span class="cmd-name">/configurar</span>
+            <span class="perm perm-manage">Gerenciar servidor</span>
+          </div>
+          <p class="cmd-desc">Configura boas-vindas e sistema de logs do servidor. Disponível também pelo painel web.</p>
+          <div class="sub"><table>
+            <tr><td>/configurar boas-vindas</td><td><code class="opt">[#canal]</code> <code class="opt">[mensagem]</code> <code class="opt">[#canal-despedida]</code> <code class="opt">[mensagem-despedida]</code> <code class="opt">[dm]</code> <code class="opt">[@cargo]</code></td><td>Use {usuario}, {servidor}, {membros} nas mensagens. @cargo = auto-cargo ao entrar</td></tr>
+            <tr><td>/configurar logs</td><td><code class="opt">[#canal]</code> <code class="opt">[mensagem-editada]</code> <code class="opt">[mensagem-apagada]</code> <code class="opt">[membro-entrou]</code> <code class="opt">[membro-saiu]</code> <code class="opt">[membro-banido]</code> <code class="opt">[cargo-alterado]</code> <code class="opt">[apelido-alterado]</code></td><td>Define qual canal recebe logs e quais eventos são registrados</td></tr>
+            <tr><td>/configurar ver</td><td>—</td><td>Exibe a configuração atual de boas-vindas e logs</td></tr>
+          </table></div>
+        </div>
+
+        <div class="cmd-card card" data-search="automod automoderação spam links palavras proibidas raid mencoes isentar">
+          <div class="cmd-header">
+            <span class="cmd-name">/automod</span>
+            <span class="perm perm-manage">Gerenciar servidor</span>
+          </div>
+          <p class="cmd-desc">Moderação automática — o bot age sozinho sem precisar de moderador online. Configurável também pelo painel web.</p>
+          <div class="sub"><table>
+            <tr><td>/automod ver</td><td>—</td><td>Exibe toda a configuração atual do auto-mod</td></tr>
+            <tr><td>/automod palavra-adicionar</td><td><code class="req">palavra</code> <code class="opt">[acao]</code></td><td>Ação: delete / warn / mute (muta por 10min)</td></tr>
+            <tr><td>/automod palavra-remover</td><td><code class="req">palavra</code></td><td>Remove da lista de palavras proibidas</td></tr>
+            <tr><td>/automod palavras-lista</td><td>—</td><td>Lista todas as palavras proibidas</td></tr>
+            <tr><td>/automod spam</td><td><code class="req">ativo</code> <code class="opt">[mensagens]</code> <code class="opt">[segundos]</code> <code class="opt">[acao]</code></td><td>Anti-spam: X mensagens em Y segundos aciona punição</td></tr>
+            <tr><td>/automod mencoes</td><td><code class="req">limite</code></td><td>Máximo de menções por mensagem (0 = desativado)</td></tr>
+            <tr><td>/automod links</td><td><code class="req">ativo</code></td><td>Bloqueia links externos e convites Discord</td></tr>
+            <tr><td>/automod raid</td><td><code class="req">ativo</code> <code class="opt">[entradas]</code> <code class="opt">[segundos]</code></td><td>Alerta quando muitos membros entram em pouco tempo</td></tr>
+            <tr><td>/automod isentar-canal</td><td><code class="req">#canal</code></td><td>Canal ignorado pelas regras de auto-mod</td></tr>
+            <tr><td>/automod isentar-cargo</td><td><code class="req">@cargo</code></td><td>Cargo ignorado pelas regras de auto-mod</td></tr>
+          </table></div>
+        </div>
+
+        <div class="cmd-card card" data-search="starboard destaque reacao estrela canal configurar">
+          <div class="cmd-header">
+            <span class="cmd-name">/starboard</span>
+            <span class="perm perm-manage">Gerenciar servidor</span>
+          </div>
+          <p class="cmd-desc">Mensagens que recebem muitas reações são repostadas em um canal de destaque automaticamente.</p>
+          <div class="sub"><table>
+            <tr><td>/starboard configurar</td><td><code class="req">#canal</code> <code class="opt">[emoji]</code> <code class="opt">[minimo]</code></td><td>Ativa o starboard. Padrão: emoji ⭐, mínimo 3 reações</td></tr>
+            <tr><td>/starboard ver</td><td>—</td><td>Exibe a configuração atual</td></tr>
+            <tr><td>/starboard desativar</td><td>—</td><td>Desativa sem apagar a configuração</td></tr>
+          </table></div>
+        </div>
+
+        <div class="cmd-card card" data-search="stats canais estatísticas membros bots boosts tickets categoria">
+          <div class="cmd-header">
+            <span class="cmd-name">/stats</span>
+            <span class="perm perm-manage">Gerenciar servidor</span>
+          </div>
+          <p class="cmd-desc">Cria canais de voz que exibem estatísticas do servidor em tempo real (atualiza a cada 10 minutos).</p>
+          <div class="sub"><table>
+            <tr><td>/stats criar</td><td><code class="req">tipo</code> <code class="opt">[categoria]</code> <code class="opt">[formato]</code></td><td>Tipos: membros, humanos, bots, canais, cargos, boosts, nivel-boost, emojis, tickets. Use {value} no formato</td></tr>
+            <tr><td>/stats remover</td><td><code class="req">tipo</code></td><td>Remove o canal de estatísticas do tipo</td></tr>
+            <tr><td>/stats lista</td><td>—</td><td>Lista todos os canais de stats configurados</td></tr>
+            <tr><td>/stats atualizar</td><td>—</td><td>Força atualização imediata de todos os canais</td></tr>
+          </table></div>
+        </div>
+
+        <div class="cmd-card card" data-search="counting contagem jogo numero canal configurar">
+          <div class="cmd-header">
+            <span class="cmd-name">/counting</span>
+            <span class="perm perm-manage">Gerenciar servidor</span>
+          </div>
+          <p class="cmd-desc">Jogo de contagem: membros enviam números em sequência no canal configurado. Erros reiniciam a contagem.</p>
+          <div class="sub"><table>
+            <tr><td>/counting configurar</td><td><code class="req">#canal</code></td><td>Define o canal do jogo</td></tr>
+            <tr><td>/counting ver</td><td>—</td><td>Exibe número atual e recorde do servidor</td></tr>
+            <tr><td>/counting desativar</td><td>—</td><td>Desativa e remove o canal de contagem</td></tr>
+          </table></div>
+        </div>
+
+        <div class="cmd-card card" data-search="jtc join to create voz temporario sala canal gatilho">
+          <div class="cmd-header">
+            <span class="cmd-name">/jtc</span>
+            <span class="perm perm-manage">Gerenciar servidor</span>
+          </div>
+          <p class="cmd-desc">Join-to-Create: quando um membro entra no canal gatilho, um canal de voz temporário é criado só para ele. Apagado automaticamente quando todos saem.</p>
+          <div class="sub"><table>
+            <tr><td>/jtc configurar</td><td><code class="req">canal_voz</code> <code class="opt">[categoria]</code> <code class="opt">[nome]</code></td><td>Use {username} no nome. Ex: 🎮 Sala de {username}</td></tr>
+            <tr><td>/jtc ver</td><td>—</td><td>Exibe a configuração atual</td></tr>
+            <tr><td>/jtc desativar</td><td>—</td><td>Desativa o sistema Join-to-Create</td></tr>
+          </table></div>
+        </div>
+      </div>
+
+    </div><!-- #content -->
+  </main>
+</div>
+<script type="module">
+  import { isLoggedIn, getStoredGuild, logout } from "./js/api.js";
+  import { sidebarHTML } from "./js/sidebar.js";
+
+  if (!isLoggedIn()) { window.location.href = "/index.html"; }
+  document.getElementById("sidebar").innerHTML = sidebarHTML();
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  document.getElementById("changeGuildBtn")?.addEventListener("click", () => window.location.href = "/guilds.html");
+  document.querySelectorAll("nav.sidebar a[data-page]").forEach((a) => { if (a.dataset.page === "docs") a.classList.add("active"); });
+
+  // Busca
+  document.getElementById("docsSearch").addEventListener("input", e => {
+    const q = e.target.value.toLowerCase().replace(/^\//, "").trim();
+    document.querySelectorAll(".cmd-card").forEach(card => {
+      card.style.display = (!q || card.dataset.search.includes(q)) ? "" : "none";
+    });
+    document.querySelectorAll(".docs-section").forEach(section => {
+      const hasVisible = [...section.querySelectorAll(".cmd-card")].some(c => c.style.display !== "none");
+      section.style.display = (hasVisible) ? "" : "none";
+    });
+  });
+
+  // Filtros por categoria
+  document.querySelectorAll(".filter-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      document.querySelectorAll(".filter-pill").forEach(p => { p.classList.remove("active"); p.classList.add("btn-ghost"); p.classList.remove("btn-primary"); });
+      pill.classList.add("active", "btn-primary");
+      pill.classList.remove("btn-ghost");
+      const cat = pill.dataset.cat;
+      document.getElementById("docsSearch").value = "";
+      document.querySelectorAll(".cmd-card").forEach(c => c.style.display = "");
+      document.querySelectorAll(".docs-section").forEach(s => {
+        s.style.display = (cat === "all" || s.dataset.cat === cat) ? "" : "none";
+      });
+    });
+  });
+</script>
+</body>
+</html>
