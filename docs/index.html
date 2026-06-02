@@ -327,6 +327,13 @@ t<!DOCTYPE html>
   <a href="#purge">🗑️ Purge</a>
   <a href="#starboard">⭐ Starboard</a>
   <a href="#stats">📊 Canais de Stats</a>
+  <a href="#slowmode">⏱️ Slow Mode &amp; TempBan</a>
+  <a href="#counting">🔢 Counting Game</a>
+  <a href="#embed">✏️ Embed Builder</a>
+  <a href="#aniversarios">🎂 Aniversários</a>
+  <a href="#agendar">📅 Mensagens Agendadas</a>
+  <a href="#jtc">🎮 Join-to-Create</a>
+  <a href="#xp-voz">🎤 XP em Voz</a>
 
   <span class="nav-group">Testes</span>
   <a href="#como-testar">Guia de testes</a>
@@ -432,6 +439,41 @@ t<!DOCTYPE html>
         <div class="icon">📊</div>
         <h4>Canais de Stats</h4>
         <p>Canais de voz com nomes que se atualizam automaticamente mostrando membros, canais, cargos e mais.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">⏱️</div>
+        <h4>Slow Mode &amp; TempBan</h4>
+        <p>Modo lento por canal com um comando. Banimento temporário: o bot desbane sozinho quando o prazo vencer.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🔢</div>
+        <h4>Counting Game</h4>
+        <p>Jogo de contagem num canal dedicado. O bot reage a cada número e reseta se alguém errar ou contar duas vezes seguidas.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">✏️</div>
+        <h4>Embed Builder</h4>
+        <p>Crie embeds bonitas com título, descrição, cor e imagem via formulário visual — sem precisar saber JSON.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🎂</div>
+        <h4>Aniversários</h4>
+        <p>Membros registram seu aniversário e o bot parabeniza automaticamente no canal configurado no dia certo.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">📅</div>
+        <h4>Mensagens Agendadas</h4>
+        <p>Agende mensagens para serem enviadas num canal em data e hora futura — o bot envia sozinho no horário certo.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🎮</div>
+        <h4>Join-to-Create</h4>
+        <p>Canal de voz "gatilho" que cria salas temporárias para cada membro. Quando a sala esvazia, o bot a apaga.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🎤</div>
+        <h4>XP em Voz</h4>
+        <p>Membros ganham XP por tempo em canais de voz. Multiplicadores por canal ou cargo para áreas prioritárias.</p>
       </div>
     </div>
   </section>
@@ -571,13 +613,16 @@ t<!DOCTYPE html>
     <table class="cmd-table">
       <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
       <tbody>
-        <tr><td><code>/mod warn @user [motivo]</code></td><td>Aplica um aviso. O membro recebe DM com o motivo.</td></tr>
+        <tr><td><code>/mod warn @user [motivo]</code></td><td>Aplica um aviso. O membro recebe DM com o motivo. (3 warns = mute 1h automático; 5 warns = kick automático)</td></tr>
         <tr><td><code>/mod mute @user 10m [motivo]</code></td><td>Silencia por tempo. Formatos: <code>10m</code>, <code>1h</code>, <code>2d</code> (máx. 28d)</td></tr>
         <tr><td><code>/mod kick @user [motivo]</code></td><td>Expulsa do servidor (pode voltar)</td></tr>
         <tr><td><code>/mod ban @user [motivo]</code></td><td>Bane permanentemente</td></tr>
+        <tr><td><code>/mod tempban @user 7d [motivo]</code></td><td>Bane temporariamente — o bot desbane sozinho no fim do prazo. Formatos: <code>1h</code>, <code>2d</code>, <code>30d</code> (máx. 365d)</td></tr>
+        <tr><td><code>/mod slowmode canal:#geral duracao:30s</code></td><td>Ativa modo lento no canal. Use <code>0</code> para desativar. Formatos: <code>0</code>, <code>30s</code>, <code>1m</code>, <code>1h</code> (máx. 6h)</td></tr>
         <tr><td><code>/mod historico @user</code></td><td>Lista todas as infrações de um usuário</td></tr>
         <tr><td><code>/mod casos</code></td><td>Lista os 10 casos mais recentes do servidor</td></tr>
         <tr><td><code>/mod remover caso:5</code></td><td>Inativa um caso pelo número</td></tr>
+        <tr><td><code>/mod purge quantidade:50</code></td><td>Apaga as últimas 50 mensagens do canal (máx. 100, últimos 14 dias)</td></tr>
       </tbody>
     </table>
   </section>
@@ -738,6 +783,25 @@ t<!DOCTYPE html>
         <tr><td><code>/xp recompensas</code></td><td>Lista todas as recompensas configuradas</td></tr>
       </tbody>
     </table>
+
+    <h3 id="xp-voz">🎤 XP em Voz</h3>
+    <p>Membros que ficam em canais de voz ganham XP a cada minuto (exceto AFK e surdos). Você pode definir multiplicadores por canal ou cargo para recompensar áreas prioritárias.</p>
+    <table class="cmd-table">
+      <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>/xp voz</code></td><td>Mostra a configuração atual de XP em voz</td></tr>
+        <tr><td><code>/xp voz ativar:Sim xp_por_minuto:10</code></td><td>Ativa XP em voz e define 10 XP por minuto</td></tr>
+        <tr><td><code>/xp voz ativar:Não</code></td><td>Desativa XP em voz</td></tr>
+        <tr><td><code>/xp multiplicador-canal canal:#gaming multiplicador:2</code></td><td>Dobra o XP no canal <code>#gaming</code></td></tr>
+        <tr><td><code>/xp multiplicador-canal canal:#gaming multiplicador:0</code></td><td>Remove o multiplicador do canal (use 0 para remover)</td></tr>
+        <tr><td><code>/xp multiplicador-cargo cargo:@VIP multiplicador:1.5</code></td><td>Membros VIP ganham 50% a mais de XP</td></tr>
+        <tr><td><code>/xp multiplicadores</code></td><td>Lista todos os multiplicadores de canal e cargo configurados</td></tr>
+      </tbody>
+    </table>
+    <div class="alert alert-info">
+      <strong>ℹ️ Como funciona o multiplicador</strong>
+      O bot aplica o maior multiplicador entre canal e cargo — eles não se somam. Exemplo: canal 2x e cargo 1.5x → o membro recebe 2x (o maior).
+    </div>
   </section>
 
   <!-- TAGS -->
@@ -988,6 +1052,261 @@ t<!DOCTYPE html>
     </div>
   </section>
 
+  <!-- SLOWMODE & TEMPBAN -->
+  <section id="slowmode">
+    <h2>⏱️ Slow Mode &amp; Banimento Temporário</h2>
+    <p>Dois recursos de moderação que trabalham no tempo — slow mode limita a velocidade de mensagens num canal, e o tempban bane por um prazo e desbane automaticamente.</p>
+
+    <h3>Slow Mode</h3>
+    <p>Define um intervalo mínimo entre mensagens num canal. Ideal para conter agitação em momentos de pico sem precisar silenciar ninguém.</p>
+    <table class="cmd-table">
+      <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>/mod slowmode canal:#geral duracao:30s</code></td><td>30 segundos entre mensagens no #geral</td></tr>
+        <tr><td><code>/mod slowmode canal:#geral duracao:5m</code></td><td>5 minutos entre mensagens</td></tr>
+        <tr><td><code>/mod slowmode canal:#geral duracao:0</code></td><td>Desativa o modo lento (volta ao normal)</td></tr>
+      </tbody>
+    </table>
+    <div class="alert alert-info">
+      <strong>ℹ️ Formatos aceitos</strong>
+      <code>0</code> (off), <code>30s</code>, <code>1m</code>, <code>10m</code>, <code>1h</code> — máximo 6 horas.
+    </div>
+
+    <h3>Banimento Temporário (TempBan)</h3>
+    <p>Bane o membro por um prazo definido. Quando o prazo vencer, o bot processa automaticamente o desbanimento — não precisa de intervenção manual.</p>
+    <table class="cmd-table">
+      <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>/mod tempban @user duracao:1h</code></td><td>Bane por 1 hora, desbane automaticamente</td></tr>
+        <tr><td><code>/mod tempban @user duracao:7d motivo:Comportamento impróprio</code></td><td>Bane por 7 dias com motivo registrado</td></tr>
+      </tbody>
+    </table>
+    <div class="alert alert-warning">
+      <strong>⚠️ Auto-escalação de advertências</strong>
+      O sistema de warn tem escalação automática: ao acumular <strong>3 warns</strong> o membro leva mute de 1 hora; ao chegar em <strong>5 warns</strong> é expulso automaticamente. Ambas as ações geram um caso de moderação separado.
+    </div>
+  </section>
+
+  <!-- COUNTING GAME -->
+  <section id="counting">
+    <h2>🔢 Counting Game</h2>
+    <p>
+      Um jogo de contagem colaborativo. Os membros enviam números em sequência num canal dedicado, e o bot reage com ✅ quando está certo.
+      Errar o número ou contar duas vezes seguidas reseta a contagem para zero e o bot avisa todo mundo.
+    </p>
+
+    <h3>Como ativar</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Crie um canal de texto</h4>
+          <p>Crie um canal chamado <code>#🔢-contagem</code> ou similar. Só números devem ir lá — outros textos são apagados automaticamente.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Configure com o comando</h4>
+          <p>Use <code>/counting configurar canal:#🔢-contagem</code>.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Comece a contar!</h4>
+          <p>Qualquer membro envia <code>1</code> no canal. O próximo membro (diferente) manda <code>2</code>, e assim por diante.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3>Comandos</h3>
+    <table class="cmd-table">
+      <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>/counting configurar canal:#contagem</code></td><td>Define o canal do jogo de contagem</td></tr>
+        <tr><td><code>/counting ver</code></td><td>Mostra canal, número atual e recorde do servidor</td></tr>
+        <tr><td><code>/counting desativar</code></td><td>Desativa e remove o canal de contagem</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Regras do jogo</h3>
+    <table class="cmd-table">
+      <thead><tr><th>Situação</th><th>O que acontece</th></tr></thead>
+      <tbody>
+        <tr><td>Número correto</td><td>✅ reação — contagem avança</td></tr>
+        <tr><td>Número errado</td><td>❌ reação + mensagem de erro — contagem reseta para 0</td></tr>
+        <tr><td>Mesmo usuário contando duas vezes</td><td>Mensagem apagada — contagem não reseta, mas o número não avança</td></tr>
+        <tr><td>Múltiplo de 100</td><td>🎉 mensagem de celebração no canal</td></tr>
+        <tr><td>Texto que não é número</td><td>Mensagem apagada silenciosamente</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- EMBED BUILDER -->
+  <section id="embed">
+    <h2>✏️ Embed Builder</h2>
+    <p>
+      Cria embeds bonitas com aparência profissional em qualquer canal de texto — sem precisar saber JSON ou usar bots externos.
+      Um formulário visual abre com campos de título, descrição, cor, rodapé e imagem.
+    </p>
+
+    <h3>Como usar</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Digite o comando</h4>
+          <p>Use <code>/embed</code> (envia no canal atual) ou <code>/embed canal:#anuncios</code> para escolher o destino.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Preencha o formulário</h4>
+          <p>Um pop-up abre com os campos: <strong>Título</strong>, <strong>Descrição</strong>, <strong>Cor</strong> (ex: <code>#5865F2</code>), <strong>Rodapé</strong> e <strong>URL da imagem</strong>.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Envie</h4>
+          <p>Clique em Enviar e o bot posta a embed imediatamente no canal escolhido.</p>
+        </div>
+      </div>
+    </div>
+
+    <table class="cmd-table">
+      <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>/embed</code></td><td>Abre o formulário — a embed vai para o canal onde o comando foi digitado</td></tr>
+        <tr><td><code>/embed canal:#anuncios</code></td><td>Abre o formulário — a embed vai para o canal <code>#anuncios</code></td></tr>
+      </tbody>
+    </table>
+    <div class="alert alert-info">
+      <strong>ℹ️ Permissão necessária</strong>
+      Apenas membros com <strong>Gerenciar mensagens</strong> conseguem usar este comando.
+    </div>
+  </section>
+
+  <!-- ANIVERSÁRIOS -->
+  <section id="aniversarios">
+    <h2>🎂 Aniversários</h2>
+    <p>
+      Membros registram o dia e mês do seu aniversário. Todo dia o bot verifica quem faz aniversário e manda parabéns automaticamente num canal configurado pela administração.
+    </p>
+
+    <h3>Para os membros</h3>
+    <table class="cmd-table">
+      <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>/aniversario registrar dia:15 mes:3</code></td><td>Registra seu aniversário para 15 de março</td></tr>
+        <tr><td><code>/aniversario ver</code></td><td>Vê a data do seu próprio aniversário</td></tr>
+        <tr><td><code>/aniversario ver usuario:@Pedro</code></td><td>Vê o aniversário de outro membro</td></tr>
+        <tr><td><code>/aniversario remover</code></td><td>Remove o seu aniversário do registro</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Para administradores</h3>
+    <table class="cmd-table">
+      <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>/aniversario configurar canal:#aniversários</code></td><td>Define o canal onde o parabéns será enviado</td></tr>
+        <tr><td><code>/aniversario configurar mensagem:🎂 Hoje é aniversário de {usuario}! Feliz aniversário! 🎉</code></td><td>Define a mensagem personalizada</td></tr>
+      </tbody>
+    </table>
+    <div class="alert alert-info">
+      <strong>ℹ️ Variável disponível</strong>
+      Use <code>{usuario}</code> na mensagem — o bot substitui pela menção do membro (ex: <code>@Pedro</code>).
+    </div>
+    <div class="alert alert-warning">
+      <strong>⚠️ Só dia e mês</strong>
+      O bot guarda apenas o <strong>dia e o mês</strong> — sem o ano. Isso protege a privacidade dos membros.
+    </div>
+  </section>
+
+  <!-- MENSAGENS AGENDADAS -->
+  <section id="agendar">
+    <h2>📅 Mensagens Agendadas</h2>
+    <p>
+      Agende uma mensagem para ser enviada num canal em uma data e hora futura. O bot verifica a cada minuto e envia no momento certo — sem precisar estar online.
+    </p>
+
+    <h3>Como usar</h3>
+    <table class="cmd-table">
+      <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>/agendar criar canal:#anuncios mensagem:Bem-vindos ao evento! quando:20/07/2026 20:00</code></td>
+          <td>Agenda a mensagem para 20 de julho de 2026 às 20h</td>
+        </tr>
+        <tr><td><code>/agendar lista</code></td><td>Lista todas as mensagens pendentes com ID, canal, data e prévia do texto</td></tr>
+        <tr><td><code>/agendar cancelar id:3</code></td><td>Cancela a mensagem de ID 3 antes de ser enviada</td></tr>
+      </tbody>
+    </table>
+    <div class="alert alert-info">
+      <strong>ℹ️ Formato da data</strong>
+      Use <strong>DD/MM/AAAA HH:MM</strong> — exemplo: <code>01/06/2026 20:00</code>. A data precisa ser no futuro.
+    </div>
+    <div class="alert alert-warning">
+      <strong>⚠️ Precisão</strong>
+      O bot verifica a cada 1 minuto, então a mensagem pode ser enviada com até 1 minuto de atraso em relação ao horário exato.
+    </div>
+  </section>
+
+  <!-- JOIN-TO-CREATE -->
+  <section id="jtc">
+    <h2>🎮 Join-to-Create (Voz Temporária)</h2>
+    <p>
+      Cria um sistema de salas de voz sob demanda. Você configura um canal "gatilho": quando alguém entra nele, o bot cria uma sala de voz exclusiva para aquela pessoa e a move para lá.
+      Quando a sala fica vazia, o bot apaga automaticamente.
+    </p>
+
+    <h3>Como ativar</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Crie o canal gatilho</h4>
+          <p>Crie um canal de voz chamado <code>➕ Criar Sala</code> ou similar. Este canal só serve como "botão" — o bot vai mover a pessoa para a sala criada.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Configure com o comando</h4>
+          <p>Use <code>/jtc configurar canal:#criar-sala</code>. Você pode também definir uma categoria e um modelo de nome.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Teste!</h4>
+          <p>Entre no canal gatilho — o bot cria uma sala e te move para lá. Ao sair, a sala é apagada.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3>Comandos</h3>
+    <table class="cmd-table">
+      <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>/jtc configurar canal:#criar-sala</code></td><td>Define o canal gatilho com o nome padrão <code>🎮 {username}</code></td></tr>
+        <tr><td><code>/jtc configurar canal:#criar-sala nome:🔊 Sala de {username} categoria:#Salas</code></td><td>Canal gatilho, nome personalizado e categoria para as salas temporárias</td></tr>
+        <tr><td><code>/jtc ver</code></td><td>Mostra a configuração atual</td></tr>
+        <tr><td><code>/jtc desativar</code></td><td>Desativa o sistema (não apaga as salas já criadas)</td></tr>
+      </tbody>
+    </table>
+    <div class="alert alert-info">
+      <strong>ℹ️ Variável no nome</strong>
+      Use <code>{username}</code> no modelo de nome — o bot substitui pelo apelido do membro no servidor. Ex: <code>🎮 {username}</code> → <strong>🎮 Pedro</strong>.
+    </div>
+    <div class="alert alert-warning">
+      <strong>⚠️ Permissão necessária no bot</strong>
+      O bot precisa de <strong>Gerenciar canais</strong> e <strong>Mover membros</strong> para criar e deletar salas e mover o membro para a nova sala.
+    </div>
+  </section>
+
   <!-- COMO TESTAR -->
   <section id="como-testar">
     <h2>✅ Guia completo de testes</h2>
@@ -1159,6 +1478,86 @@ t<!DOCTYPE html>
           <div class="check-item"><input type="checkbox" id="c14e"><label for="c14e">Use <code>/stats lista</code> → todos os canais criados aparecem com seus tipos</label></div>
           <div class="check-item"><input type="checkbox" id="c14f"><label for="c14f">Use <code>/stats atualizar</code> → todos os canais atualizam o número na hora</label></div>
           <div class="check-item"><input type="checkbox" id="c14g"><label for="c14g">Use <code>/stats remover tipo:membros</code> → o canal de voz some do servidor automaticamente</label></div>
+        </div>
+      </details>
+
+      <details class="check-group">
+        <summary>⏱️ Slow Mode &amp; TempBan</summary>
+        <div class="check-body">
+          <div class="check-item"><input type="checkbox" id="c15a"><label for="c15a">Use <code>/mod slowmode canal:#geral duracao:30s</code> → tente enviar mensagens rápidas, o Discord bloqueia</label></div>
+          <div class="check-item"><input type="checkbox" id="c15b"><label for="c15b">Use <code>/mod slowmode canal:#geral duracao:0</code> → modo lento desativado</label></div>
+          <div class="check-item"><input type="checkbox" id="c15c"><label for="c15c">Use <code>/mod tempban @contaTeste duracao:1m motivo:Teste</code> → conta é banida</label></div>
+          <div class="check-item"><input type="checkbox" id="c15d"><label for="c15d">Aguarde 1 minuto → o bot processa o desban automaticamente (em até 5 minutos)</label></div>
+        </div>
+      </details>
+
+      <details class="check-group">
+        <summary>🔢 Counting Game</summary>
+        <div class="check-body">
+          <div class="check-item"><input type="checkbox" id="c16a"><label for="c16a">Crie um canal <code>#contagem</code> e use <code>/counting configurar canal:#contagem</code></label></div>
+          <div class="check-item"><input type="checkbox" id="c16b"><label for="c16b">Use <code>/counting ver</code> → mostra contagem em 0 e recorde 0</label></div>
+          <div class="check-item"><input type="checkbox" id="c16c"><label for="c16c">Envie <code>1</code> no canal → bot reage com ✅</label></div>
+          <div class="check-item"><input type="checkbox" id="c16d"><label for="c16d">Com outra conta, envie <code>2</code> → ✅</label></div>
+          <div class="check-item"><input type="checkbox" id="c16e"><label for="c16e">Tente enviar <code>3</code> com a mesma conta de antes → mensagem apagada</label></div>
+          <div class="check-item"><input type="checkbox" id="c16f"><label for="c16f">Envie <code>99</code> (número errado) → ❌, contagem reseta para 0</label></div>
+          <div class="check-item"><input type="checkbox" id="c16g"><label for="c16g">Envie texto qualquer → mensagem apagada silenciosamente</label></div>
+        </div>
+      </details>
+
+      <details class="check-group">
+        <summary>✏️ Embed Builder</summary>
+        <div class="check-body">
+          <div class="check-item"><input type="checkbox" id="c17a"><label for="c17a">Use <code>/embed canal:#geral</code> → um formulário pop-up abre</label></div>
+          <div class="check-item"><input type="checkbox" id="c17b"><label for="c17b">Preencha título, descrição e cor (ex: <code>#57f287</code>) → clique Enviar</label></div>
+          <div class="check-item"><input type="checkbox" id="c17c"><label for="c17c">A embed aparece no canal <code>#geral</code> com a cor correta</label></div>
+          <div class="check-item"><input type="checkbox" id="c17d"><label for="c17d">Use <code>/embed</code> sem escolher canal → embed vai para o canal atual</label></div>
+        </div>
+      </details>
+
+      <details class="check-group">
+        <summary>🎂 Aniversários</summary>
+        <div class="check-body">
+          <div class="check-item"><input type="checkbox" id="c18a"><label for="c18a">Crie canal <code>#🎂-aniversários</code> e use <code>/aniversario configurar canal:#🎂-aniversários</code></label></div>
+          <div class="check-item"><input type="checkbox" id="c18b"><label for="c18b">Use <code>/aniversario registrar dia:15 mes:3</code> → confirmação aparece</label></div>
+          <div class="check-item"><input type="checkbox" id="c18c"><label for="c18c">Use <code>/aniversario ver</code> → mostra "15 de Março"</label></div>
+          <div class="check-item"><input type="checkbox" id="c18d"><label for="c18d">Com conta de teste, registre um aniversário e use <code>/aniversario ver usuario:@contaTeste</code></label></div>
+          <div class="check-item"><input type="checkbox" id="c18e"><label for="c18e">Use <code>/aniversario remover</code> → confirmação de remoção</label></div>
+        </div>
+      </details>
+
+      <details class="check-group">
+        <summary>📅 Mensagens Agendadas</summary>
+        <div class="check-body">
+          <div class="check-item"><input type="checkbox" id="c19a"><label for="c19a">Use <code>/agendar criar canal:#geral mensagem:Teste de agendamento! quando:DD/MM/AAAA HH:MM</code> com horário daqui a 2 minutos</label></div>
+          <div class="check-item"><input type="checkbox" id="c19b"><label for="c19b">Use <code>/agendar lista</code> → a mensagem aparece com status pendente</label></div>
+          <div class="check-item"><input type="checkbox" id="c19c"><label for="c19c">Aguarde o horário → a mensagem é enviada automaticamente no canal</label></div>
+          <div class="check-item"><input type="checkbox" id="c19d"><label for="c19d">Crie outra mensagem e use <code>/agendar cancelar id:N</code> → confirmação de cancelamento</label></div>
+          <div class="check-item"><input type="checkbox" id="c19e"><label for="c19e">Tente agendar para uma data no passado → bot recusa com erro</label></div>
+        </div>
+      </details>
+
+      <details class="check-group">
+        <summary>🎮 Join-to-Create</summary>
+        <div class="check-body">
+          <div class="check-item"><input type="checkbox" id="c20a"><label for="c20a">Crie um canal de voz chamado <code>➕ Criar Sala</code></label></div>
+          <div class="check-item"><input type="checkbox" id="c20b"><label for="c20b">Use <code>/jtc configurar canal:#criar-sala nome:🎮 {username}</code></label></div>
+          <div class="check-item"><input type="checkbox" id="c20c"><label for="c20c">Use <code>/jtc ver</code> → mostra o canal e o template configurados</label></div>
+          <div class="check-item"><input type="checkbox" id="c20d"><label for="c20d">Entre no canal <code>➕ Criar Sala</code> → o bot cria uma sala com seu nome e te move</label></div>
+          <div class="check-item"><input type="checkbox" id="c20e"><label for="c20e">Saia da sala → o bot a apaga automaticamente</label></div>
+          <div class="check-item"><input type="checkbox" id="c20f"><label for="c20f">Use <code>/jtc desativar</code> → confirma desativação</label></div>
+        </div>
+      </details>
+
+      <details class="check-group">
+        <summary>🎤 XP em Voz + Multiplicadores</summary>
+        <div class="check-body">
+          <div class="check-item"><input type="checkbox" id="c21a"><label for="c21a">Use <code>/xp voz ativar:Sim xp_por_minuto:50</code> (50 XP para testar rápido)</label></div>
+          <div class="check-item"><input type="checkbox" id="c21b"><label for="c21b">Entre em um canal de voz por 1–2 minutos</label></div>
+          <div class="check-item"><input type="checkbox" id="c21c"><label for="c21c">Use <code>/nivel</code> → XP aumentou pela permanência em voz</label></div>
+          <div class="check-item"><input type="checkbox" id="c21d"><label for="c21d">Use <code>/xp multiplicador-canal canal:#gaming multiplicador:2</code></label></div>
+          <div class="check-item"><input type="checkbox" id="c21e"><label for="c21e">Use <code>/xp multiplicadores</code> → canal #gaming aparece com 2x</label></div>
+          <div class="check-item"><input type="checkbox" id="c21f"><label for="c21f">Use <code>/xp multiplicador-canal canal:#gaming multiplicador:0</code> → multiplicador removido</label></div>
+          <div class="check-item"><input type="checkbox" id="c21g"><label for="c21g">Após os testes, use <code>/xp voz xp_por_minuto:10</code> para voltar ao padrão</label></div>
         </div>
       </details>
 

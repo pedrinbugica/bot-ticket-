@@ -60,6 +60,12 @@ export function listExpiredBans() {
     .all();
 }
 
+export function deactivateActiveTempbans(guildId, userId) {
+  return getDb()
+    .prepare("UPDATE infractions SET active = 0 WHERE guild_id = ? AND user_id = ? AND action = 'tempban' AND active = 1")
+    .run(guildId, userId).changes;
+}
+
 export function getRecentCases(guildId, limit = 10) {
   return getDb()
     .prepare("SELECT * FROM infractions WHERE guild_id = ? ORDER BY created_at DESC LIMIT ?")

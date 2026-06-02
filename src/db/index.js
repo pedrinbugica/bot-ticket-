@@ -82,6 +82,11 @@ function runMigrations(database) {
   migrateTags(database);
   migrateStarboard(database);
   migrateStats(database);
+  migrateCounting(database);
+  migrateBirthdays(database);
+  migrateScheduled(database);
+  migrateJtc(database);
+  migrateXpExtensions(database);
 }
 
 function migrateStarboard(database) {
@@ -344,6 +349,95 @@ function migrateRoles(database) {
     CREATE INDEX IF NOT EXISTS idx_role_menu_options_menu ON role_menu_options(menu_id);
     CREATE INDEX IF NOT EXISTS idx_reaction_roles_guild ON reaction_roles(guild_id);
   `);
+}
+
+function migrateCounting(database) {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS counting_channels (
+      guild_id TEXT PRIMARY KEY,
+      channel_id TEXT NOT NULL,
+      current_number INTEGER NOT NULL DEFAULT 0,
+      last_user_id TEXT,
+      high_score INTEGER NOT NULL DEFAULT 0
+    );
+  `);
+}
+
+function migrateBirthdays(database) {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS birthdays (
+      guild_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      day INTEGER NOT NULL,
+      month INTEGER NOT NULL,
+      PRIMARY KEY (guild_id, user_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS birthday_settings (
+      guild_id TEXT PRIMARY KEY,
+      channel_id TEXT,
+      message TEXT NOT NULL DEFAULT '🎂 Feliz aniversário, {usuario}! Que seu dia seja incrível! 🎉'
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_birthdays_day_month ON birthdays(day, month);
+  `);
+}
+
+function migrateScheduled(database) {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS scheduled_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      guild_id TEXT NOT NULL,
+      channel_id TEXT NOT NULL,
+      content TEXT NOT NULL,
+      send_at TEXT NOT NULL,
+      sent INTEGER NOT NULL DEFAULT 0,
+      created_by TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_scheduled_pending ON scheduled_messages(sent, send_at);
+  `);
+}
+
+function migrateJtc(database) {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS jtc_config (
+      guild_id TEXT PRIMARY KEY,
+      trigger_channel_id TEXT NOT NULL,
+      category_id TEXT,
+      name_template TEXT NOT NULL DEFAULT '🎮 {username}'
+    );
+
+    CREATE TABLE IF NOT EXISTS jtc_channels (
+      channel_id TEXT PRIMARY KEY,
+      guild_id TEXT NOT NULL,
+      owner_id TEXT NOT NULL
+    );
+  `);
+}
+
+function migrateXpExtensions(database) {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS xp_multipliers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      guild_id TEXT NOT NULL,
+      target_type TEXT NOT NULL,
+      target_id TEXT NOT NULL,
+      multiplier REAL NOT NULL DEFAULT 1.0,
+      UNIQUE(guild_id, target_type, target_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_xp_multipliers_guild ON xp_multipliers(guild_id);
+  `);
+
+  const cols = new Set(database.prepare("PRAGMA table_info(level_settings)").all().map((c) => c.name));
+  if (!cols.has("voice_xp_enabled")) {
+    database.exec("ALTER TABLE level_settings ADD COLUMN voice_xp_enabled INTEGER NOT NULL DEFAULT 0");
+  }
+  if (!cols.has("voice_xp_per_minute")) {
+    database.exec("ALTER TABLE level_settings ADD COLUMN voice_xp_per_minute INTEGER NOT NULL DEFAULT 10");
+  }
 }
 
 function migrateGuildSettingsColumns(database) {

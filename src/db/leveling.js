@@ -15,6 +15,8 @@ export function getLevelSettings(guildId) {
     levelup_channel_id: null,
     xp_per_message: 15,
     xp_cooldown_secs: 60,
+    voice_xp_enabled: 0,
+    voice_xp_per_minute: 10,
   };
   settingsCache.set(guildId, { settings, ts: now });
   return settings;
@@ -111,4 +113,22 @@ export function getLevelRolesUpTo(guildId, level) {
   return getDb()
     .prepare("SELECT * FROM level_roles WHERE guild_id = ? AND level_required <= ? ORDER BY level_required")
     .all(guildId, level);
+}
+
+export function getXpMultipliers(guildId) {
+  return getDb().prepare("SELECT * FROM xp_multipliers WHERE guild_id = ?").all(guildId);
+}
+
+export function upsertXpMultiplier(guildId, targetType, targetId, multiplier) {
+  getDb().prepare(`
+    INSERT INTO xp_multipliers (guild_id, target_type, target_id, multiplier)
+    VALUES (?, ?, ?, ?)
+    ON CONFLICT(guild_id, target_type, target_id) DO UPDATE SET multiplier = excluded.multiplier
+  `).run(guildId, targetType, targetId, multiplier);
+}
+
+export function removeXpMultiplier(guildId, targetType, targetId) {
+  return getDb()
+    .prepare("DELETE FROM xp_multipliers WHERE guild_id = ? AND target_type = ? AND target_id = ?")
+    .run(guildId, targetType, targetId).changes;
 }

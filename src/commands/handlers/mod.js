@@ -5,7 +5,7 @@ import {
 } from "../../moderation/actions.js";
 import {
   getInfractionsByUser, getInfractionByCase,
-  deactivateInfraction, getRecentCases,
+  deactivateInfraction, getRecentCases, deactivateActiveTempbans,
 } from "../../db/infractions.js";
 
 const ACTION_ICONS = { warn: "⚠️", mute: "🔇", kick: "👢", ban: "🔨", tempban: "⏳" };
@@ -267,6 +267,39 @@ export async function handleModCommand(interaction) {
 
     const { caseNumber } = await tempbanMember({ guild, target, moderator, reason, durationMs });
     await interaction.editReply({ embeds: [buildResultEmbed("tempban", target.user, caseNumber, reason, durationMs, false)] });
+    return true;
+  }
+
+  if (sub === "unban") {
+    if (!moderator.permissions.has(PermissionFlagsBits.BanMembers)) {
+      return interaction.editReply({ content: "❌ Você precisa da permissão **Banir membros**." }), true;
+    }
+    const userId = interaction.options.getString("usuario_id").trim();
+    const reason = interaction.options.getString("motivo");
+
+    if (!/^\d{17,20}$/.test(userId)) {
+      return interaction.editReply({ content: "❌ ID inválido. Copie o ID numérico do usuário (ex: `123456789012345678`)." }), true;
+    }
+
+    const unbanned = await guild.members.unban(userId, reason ?? "Desban via /mod unban").catch(() => null);
+    if (!unbanned) {
+      return interaction.editReply({ content: "❌ Não consegui desbanir. Verifique se o ID está correto e se o usuário está banido." }), true;
+    }
+
+    deactivateActiveTempbans(guild.id, userId);
+
+    await interaction.editReply({
+      embeds: [
+        new EmbedBuilder()
+          .setColor(0x57f287)
+          .setTitle("✅ Usuário desbanido")
+          .addFields(
+            { name: "Usuário", value: `${unbanned.tag ?? unbanned.username ?? userId} (\`${userId}\`)`, inline: true },
+            { name: "Motivo", value: reason ?? "Não informado", inline: false }
+          )
+          .setTimestamp(),
+      ],
+    });
     return true;
   }
 

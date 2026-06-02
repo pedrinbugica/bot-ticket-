@@ -65,6 +65,12 @@ export function buildCommandDefinitions() {
           .addUserOption((o) => o.setName("usuario").setDescription("Membro").setRequired(true))
           .addStringOption((o) => o.setName("duracao").setDescription("Duração: 1h, 2d, 7d (máx. 365d)").setRequired(true))
           .addStringOption((o) => o.setName("motivo").setDescription("Motivo").setMaxLength(500))
+      )
+      .addSubcommand((s) =>
+        s.setName("unban")
+          .setDescription("Desbane um usuário banido do servidor")
+          .addStringOption((o) => o.setName("usuario_id").setDescription("ID do usuário banido (número de 18 dígitos)").setRequired(true))
+          .addStringOption((o) => o.setName("motivo").setDescription("Motivo do desbanimento").setMaxLength(500))
       ),
 
     new SlashCommandBuilder()
@@ -191,7 +197,26 @@ export function buildCommandDefinitions() {
           .setDescription("Remove a recompensa de cargo de um nível")
           .addIntegerOption((o) => o.setName("nivel").setDescription("Nível da recompensa a remover").setRequired(true).setMinValue(1))
       )
-      .addSubcommand((s) => s.setName("recompensas").setDescription("Lista todos os cargos de recompensa configurados")),
+      .addSubcommand((s) => s.setName("recompensas").setDescription("Lista todos os cargos de recompensa configurados"))
+      .addSubcommand((s) =>
+        s.setName("voz")
+          .setDescription("Configura o XP ganho em canais de voz (sem parâmetros = ver configuração)")
+          .addBooleanOption((o) => o.setName("ativar").setDescription("Ativar ou desativar XP em voz"))
+          .addIntegerOption((o) => o.setName("xp_por_minuto").setDescription("XP por minuto em voz (padrão: 10)").setMinValue(1).setMaxValue(100))
+      )
+      .addSubcommand((s) =>
+        s.setName("multiplicador-canal")
+          .setDescription("Define multiplicador de XP para um canal (0 = remover)")
+          .addChannelOption((o) => o.setName("canal").setDescription("Canal de texto ou voz").setRequired(true))
+          .addNumberOption((o) => o.setName("multiplicador").setDescription("Multiplicador (ex: 2 = dobro). Use 0 para remover.").setMinValue(0).setMaxValue(10))
+      )
+      .addSubcommand((s) =>
+        s.setName("multiplicador-cargo")
+          .setDescription("Define multiplicador de XP para membros com um cargo (0 = remover)")
+          .addRoleOption((o) => o.setName("cargo").setDescription("Cargo alvo").setRequired(true))
+          .addNumberOption((o) => o.setName("multiplicador").setDescription("Multiplicador (ex: 1.5 = 50% a mais). Use 0 para remover.").setMinValue(0).setMaxValue(10))
+      )
+      .addSubcommand((s) => s.setName("multiplicadores").setDescription("Lista todos os multiplicadores de XP configurados")),
 
     new SlashCommandBuilder()
       .setName("enquete")
@@ -430,5 +455,83 @@ export function buildCommandDefinitions() {
       .addSubcommand((s) =>
         s.setName("stats").setDescription("Estatísticas de tickets do servidor")
       ),
+    new SlashCommandBuilder()
+      .setName("counting")
+      .setDescription("Gerencia o jogo de contagem do servidor")
+      .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+      .addSubcommand((s) =>
+        s.setName("configurar")
+          .setDescription("Define o canal onde acontece o jogo de contagem")
+          .addChannelOption((o) => o.setName("canal").setDescription("Canal de texto").setRequired(true))
+      )
+      .addSubcommand((s) => s.setName("ver").setDescription("Exibe o status atual da contagem"))
+      .addSubcommand((s) => s.setName("desativar").setDescription("Desativa e remove o canal de contagem")),
+
+    new SlashCommandBuilder()
+      .setName("embed")
+      .setDescription("Cria e envia um embed customizado em um canal")
+      .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
+      .addChannelOption((o) => o.setName("canal").setDescription("Canal de destino (padrão: canal atual)")),
+
+    new SlashCommandBuilder()
+      .setName("aniversario")
+      .setDescription("Gerencia o sistema de aniversários do servidor")
+      .addSubcommand((s) =>
+        s.setName("registrar")
+          .setDescription("Registra o seu aniversário")
+          .addIntegerOption((o) => o.setName("dia").setDescription("Dia (1-31)").setRequired(true).setMinValue(1).setMaxValue(31))
+          .addIntegerOption((o) => o.setName("mes").setDescription("Mês (1-12)").setRequired(true).setMinValue(1).setMaxValue(12))
+      )
+      .addSubcommand((s) => s.setName("remover").setDescription("Remove o seu aniversário do registro"))
+      .addSubcommand((s) =>
+        s.setName("ver")
+          .setDescription("Vê o aniversário de um membro")
+          .addUserOption((o) => o.setName("usuario").setDescription("Membro (padrão: você mesmo)"))
+      )
+      .addSubcommand((s) =>
+        s.setName("configurar")
+          .setDescription("Configura o canal e mensagem de parabéns (requer Gerenciar servidor)")
+          .addChannelOption((o) => o.setName("canal").setDescription("Canal onde o parabéns será enviado"))
+          .addStringOption((o) => o.setName("mensagem").setDescription("Mensagem de parabéns. Use {usuario}.").setMaxLength(500))
+      ),
+
+    new SlashCommandBuilder()
+      .setName("agendar")
+      .setDescription("Gerencia mensagens agendadas para envio futuro")
+      .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
+      .addSubcommand((s) =>
+        s.setName("criar")
+          .setDescription("Agenda uma mensagem para ser enviada em um canal")
+          .addChannelOption((o) => o.setName("canal").setDescription("Canal de destino").setRequired(true))
+          .addStringOption((o) => o.setName("mensagem").setDescription("Texto da mensagem").setRequired(true).setMaxLength(2000))
+          .addStringOption((o) => o.setName("quando").setDescription("Data e hora: DD/MM/AAAA HH:MM — ex: 20/07/2026 15:00").setRequired(true))
+      )
+      .addSubcommand((s) => s.setName("lista").setDescription("Lista todas as mensagens agendadas do servidor"))
+      .addSubcommand((s) =>
+        s.setName("cancelar")
+          .setDescription("Cancela uma mensagem agendada pelo ID")
+          .addIntegerOption((o) => o.setName("id").setDescription("ID da mensagem (veja com /agendar lista)").setRequired(true).setMinValue(1))
+      ),
+
+    new SlashCommandBuilder()
+      .setName("jtc")
+      .setDescription("Gerencia o sistema Join-to-Create de canais de voz temporários")
+      .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+      .addSubcommand((s) =>
+        s.setName("configurar")
+          .setDescription("Configura o canal gatilho para criar voz temporária")
+          .addChannelOption((o) =>
+            o.setName("canal").setDescription("Canal de voz gatilho").setRequired(true).addChannelTypes(ChannelType.GuildVoice)
+          )
+          .addChannelOption((o) =>
+            o.setName("categoria").setDescription("Categoria onde os canais serão criados (opcional)").addChannelTypes(ChannelType.GuildCategory)
+          )
+          .addStringOption((o) =>
+            o.setName("nome").setDescription("Modelo do nome — use {username}. Ex: 🎮 {username}").setMaxLength(100)
+          )
+      )
+      .addSubcommand((s) => s.setName("ver").setDescription("Exibe a configuração atual do Join-to-Create"))
+      .addSubcommand((s) => s.setName("desativar").setDescription("Desativa o sistema Join-to-Create")),
+
   ].map((c) => c.toJSON());
 }

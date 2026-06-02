@@ -10,6 +10,9 @@ import {
   listLevelRoles,
   addLevelRole,
   removeLevelRole,
+  getXpMultipliers,
+  upsertXpMultiplier,
+  removeXpMultiplier,
 } from "../../db/leveling.js";
 import { calcLevel, xpForLevel, xpForNextLevel, makeXpBar } from "../../leveling/leveling.js";
 
@@ -188,6 +191,82 @@ export async function handleLevelingCommand(interaction) {
         );
       }
 
+      await interaction.editReply({ embeds: [embed] });
+      return true;
+    }
+
+    if (sub === "voz") {
+      if (!hasPerm(interaction)) {
+        await interaction.editReply({ content: "❌ Você precisa da permissão **Gerenciar servidor**." });
+        return true;
+      }
+      const ativar = interaction.options.getBoolean("ativar");
+      const xpMin = interaction.options.getInteger("xp_por_minuto");
+      const patch = {};
+      if (ativar !== null) patch.voice_xp_enabled = ativar ? 1 : 0;
+      if (xpMin !== null) patch.voice_xp_per_minute = xpMin;
+      if (!Object.keys(patch).length) {
+        const s = getLevelSettings(guild.id);
+        await interaction.editReply({
+          content: `🎤 XP em voz: ${s.voice_xp_enabled ? "✅ Ativo" : "❌ Inativo"} · **${s.voice_xp_per_minute ?? 10} XP/min**`,
+        });
+        return true;
+      }
+      upsertLevelSettings(guild.id, patch);
+      await interaction.editReply({ content: "✅ Configurações de XP em voz atualizadas." });
+      return true;
+    }
+
+    if (sub === "multiplicador-canal") {
+      if (!hasPerm(interaction)) {
+        await interaction.editReply({ content: "❌ Você precisa da permissão **Gerenciar servidor**." });
+        return true;
+      }
+      const channel = interaction.options.getChannel("canal");
+      const mult = interaction.options.getNumber("multiplicador");
+      if (mult === null || mult === 0) {
+        const removed = removeXpMultiplier(guild.id, "channel", channel.id);
+        await interaction.editReply({ content: removed ? `✅ Multiplicador de ${channel} removido.` : `❌ Nenhum multiplicador definido para ${channel}.` });
+      } else {
+        upsertXpMultiplier(guild.id, "channel", channel.id, mult);
+        await interaction.editReply({ content: `✅ Multiplicador de ${channel} definido para **${mult}x**.` });
+      }
+      return true;
+    }
+
+    if (sub === "multiplicador-cargo") {
+      if (!hasPerm(interaction)) {
+        await interaction.editReply({ content: "❌ Você precisa da permissão **Gerenciar servidor**." });
+        return true;
+      }
+      const role = interaction.options.getRole("cargo");
+      const mult = interaction.options.getNumber("multiplicador");
+      if (mult === null || mult === 0) {
+        const removed = removeXpMultiplier(guild.id, "role", role.id);
+        await interaction.editReply({ content: removed ? `✅ Multiplicador de <@&${role.id}> removido.` : `❌ Nenhum multiplicador definido para <@&${role.id}>.` });
+      } else {
+        upsertXpMultiplier(guild.id, "role", role.id, mult);
+        await interaction.editReply({ content: `✅ Multiplicador de <@&${role.id}> definido para **${mult}x**.` });
+      }
+      return true;
+    }
+
+    if (sub === "multiplicadores") {
+      const all = getXpMultipliers(guild.id);
+      const embed = new EmbedBuilder()
+        .setColor(0x5865f2)
+        .setTitle("✨ Multiplicadores de XP")
+        .setTimestamp();
+      if (!all.length) {
+        embed.setDescription("Nenhum multiplicador configurado. Use `/xp multiplicador-canal` ou `/xp multiplicador-cargo`.");
+      } else {
+        const channels = all.filter((m) => m.target_type === "channel");
+        const roles = all.filter((m) => m.target_type === "role");
+        const parts = [];
+        if (channels.length) parts.push("**Canais:**\n" + channels.map((m) => `<#${m.target_id}> → **${m.multiplier}x**`).join("\n"));
+        if (roles.length) parts.push("**Cargos:**\n" + roles.map((m) => `<@&${m.target_id}> → **${m.multiplier}x**`).join("\n"));
+        embed.setDescription(parts.join("\n\n"));
+      }
       await interaction.editReply({ embeds: [embed] });
       return true;
     }

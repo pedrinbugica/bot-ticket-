@@ -26,7 +26,7 @@ export function startExpiredActionsJob(client) {
         console.error(`expiredBans: erro ao processar caso ${row.id}:`, err);
       }
     }
-  }, 5 * 60 * 1000);
+  }, 60 * 1000);
 
-  console.log("Job de punições expiradas ativo (intervalo: 5 min)");
+  console.log("Job de punições expiradas ativo (intervalo: 1 min)");
 }

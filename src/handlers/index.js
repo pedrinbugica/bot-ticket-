@@ -37,6 +37,11 @@ import {
   handleConfigUiInteraction,
   isConfigUiInteraction,
 } from "../config-ui/handlers.js";
+import { handleCountingCommand } from "../commands/handlers/counting.js";
+import { handleEmbedCommand, handleEmbedModal } from "../commands/handlers/embed.js";
+import { handleBirthdaysCommand } from "../commands/handlers/birthdays.js";
+import { handleScheduledCommand } from "../commands/handlers/scheduled.js";
+import { handleJtcCommand } from "../commands/handlers/jtc.js";
 
 export async function handleInteraction(interaction, client) {
   try {
@@ -59,6 +64,11 @@ export async function handleInteraction(interaction, client) {
       if (await handleTicketAddMember(interaction)) return;
       if (await handleTicketRemoveMember(interaction)) return;
       if (await handleTicketStats(interaction)) return;
+      if (await handleCountingCommand(interaction)) return;
+      if (await handleEmbedCommand(interaction)) return;
+      if (await handleBirthdaysCommand(interaction)) return;
+      if (await handleScheduledCommand(interaction)) return;
+      if (await handleJtcCommand(interaction)) return;
       return;
     }
 
@@ -85,6 +95,7 @@ export async function handleInteraction(interaction, client) {
         await handleCloseReasonModal(interaction);
         return;
       }
+      if (await handleEmbedModal(interaction)) return;
     }
 
     if (interaction.isButton()) {
