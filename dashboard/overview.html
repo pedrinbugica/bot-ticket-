@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Overview — Bot Admin</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+
+  <main class="content">
+    <div class="topbar">
+      <h2>📊 Overview</h2>
+      <div class="user-info">
+        <img class="avatar" id="userAvatar" src="" alt="" />
+        <span id="username"></span>
+      </div>
+    </div>
+
+    <div id="content"><div class="spinner"></div></div>
+  </main>
+</div>
+
+<script type="module">
+  import { isLoggedIn, getOverview, getStoredGuild, logout } from "./js/api.js";
+  import { sidebarHTML } from "./js/sidebar.js";
+  import { formatDate, actionBadge } from "./js/layout.js";
+
+  if (!isLoggedIn()) { window.location.href = "/index.html"; }
+  const guildId = getStoredGuild();
+  if (!guildId) { window.location.href = "/guilds.html"; }
+
+  document.getElementById("sidebar").innerHTML = sidebarHTML();
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  document.getElementById("changeGuildBtn")?.addEventListener("click", () => window.location.href = "/guilds.html");
+  document.querySelectorAll("nav.sidebar a[data-page]").forEach((a) => {
+    if (a.dataset.page === "overview") a.classList.add("active");
+  });
+
+  async function load() {
+    try {
+      const data = await getOverview(guildId);
+      const { tickets, recentInfractions, topXp, activeGiveaways, activePolls, modules } = data;
+
+      const maxXp = topXp[0]?.xp ?? 1;
+
+      document.getElementById("content").innerHTML = `
+        <!-- Stats rápidas -->
+        <div class="grid grid-4" style="margin-bottom:24px">
+          <div class="stat-card">
+            <div class="stat-icon">🎫</div>
+            <div class="stat-value">${tickets.active}</div>
+            <div class="stat-label">Tickets abertos</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📬</div>
+            <div class="stat-value">${tickets.opened}</div>
+            <div class="stat-label">Total abertos</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-value">${tickets.closed}</div>
+            <div class="stat-label">Total fechados</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🎉</div>
+            <div class="stat-value">${activeGiveaways + activePolls}</div>
+            <div class="stat-label">Eventos ativos</div>
+          </div>
+        </div>
+
+        <div class="grid grid-2" style="gap:20px">
+          <!-- Infrações recentes -->
+          <div class="card">
+            <div class="section-header">
+              <h3>🔨 Infrações recentes</h3>
+              <a href="/moderation.html" class="btn btn-ghost btn-sm">Ver todas</a>
+            </div>
+            ${recentInfractions.length === 0
+              ? '<p style="color:var(--muted);font-size:14px">Nenhuma infração recente.</p>'
+              : `<div class="table-wrap"><table>
+                  <thead><tr><th>#</th><th>Ação</th><th>Usuário</th><th>Data</th></tr></thead>
+                  <tbody>
+                    ${recentInfractions.map((i) => `
+                      <tr>
+                        <td style="color:var(--muted)">#${i.case_number}</td>
+                        <td>${actionBadge(i.action)}</td>
+                        <td style="font-size:12px;color:var(--muted)">${i.user_id}</td>
+                        <td style="font-size:12px;color:var(--muted)">${formatDate(i.created_at)}</td>
+                      </tr>`).join("")}
+                  </tbody>
+                </table></div>`}
+          </div>
+
+          <!-- Top XP -->
+          <div class="card">
+            <div class="section-header">
+              <h3>⭐ Top XP</h3>
+              <a href="/leveling.html" class="btn btn-ghost btn-sm">Leaderboard</a>
+            </div>
+            ${topXp.length === 0
+              ? '<p style="color:var(--muted);font-size:14px">Nenhum usuário com XP.</p>'
+              : topXp.map((u, i) => `
+                  <div class="rank-row">
+                    <div class="rank-num ${i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : ''}">${i + 1}</div>
+                    <div class="rank-name" style="font-size:13px;color:var(--muted)">${u.user_id}</div>
+                    <div class="xp-bar-wrap"><div class="xp-bar" style="width:${Math.round((u.xp / maxXp) * 100)}%"></div></div>
+                    <div class="rank-xp">${u.xp.toLocaleString("pt-BR")} XP</div>
+                  </div>`).join("")}
+          </div>
+
+          <!-- Status dos módulos -->
+          <div class="card" style="grid-column:1/-1">
+            <div class="section-header">
+              <h3>🔧 Status dos módulos</h3>
+              <a href="/modules.html" class="btn btn-ghost btn-sm">Configurar</a>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px">
+              ${Object.entries(modules).map(([name, mod]) => {
+                const labels = { tickets:"Tickets", welcome:"Boas-vindas", logs:"Logs", automod:"Auto-mod", leveling:"XP/Níveis", starboard:"Starboard", jtc:"JTC", birthdays:"Aniversários", counting:"Counting" };
+                return `<span class="badge ${mod.enabled ? 'badge-green' : 'badge-gray'}">${labels[name] ?? name}: ${mod.enabled ? 'Ativo' : 'Inativo'}</span>`;
+              }).join("")}
+            </div>
+          </div>
+        </div>
+      `;
+    } catch (err) {
+      document.getElementById("content").innerHTML =
+        `<div class="alert alert-danger">Erro ao carregar: ${err.message}</div>`;
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>

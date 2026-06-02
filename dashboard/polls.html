@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enquetes — Bot Admin</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="content">
+    <div class="topbar">
+      <h2>📊 Enquetes</h2>
+      <div class="user-info"><img class="avatar" id="userAvatar" src="" alt="" /><span id="username"></span></div>
+    </div>
+    <div id="content"><div class="spinner"></div></div>
+  </main>
+</div>
+<script type="module">
+  import { isLoggedIn, getPolls, getStoredGuild, logout } from "./js/api.js";
+  import { sidebarHTML } from "./js/sidebar.js";
+  import { formatDate } from "./js/layout.js";
+
+  if (!isLoggedIn()) { window.location.href = "/index.html"; }
+  const guildId = getStoredGuild();
+  if (!guildId) { window.location.href = "/guilds.html"; }
+  document.getElementById("sidebar").innerHTML = sidebarHTML();
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  document.getElementById("changeGuildBtn")?.addEventListener("click", () => window.location.href = "/guilds.html");
+  document.querySelectorAll("nav.sidebar a[data-page]").forEach((a) => { if (a.dataset.page === "polls") a.classList.add("active"); });
+
+  async function load() {
+    try {
+      const { active, ended } = await getPolls(guildId);
+      document.getElementById("content").innerHTML = `
+        <div class="alert alert-info">Para criar enquetes, use <code>/enquete criar</code> no Discord.</div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="section-header"><h3>Enquetes ativas (${active.length})</h3></div>
+          ${active.length === 0
+            ? '<p style="color:var(--muted);font-size:14px">Nenhuma enquete ativa.</p>'
+            : active.map((p) => {
+                const total = p.voteCounts.reduce((a, b) => a + b, 0);
+                const maxVotes = Math.max(...p.voteCounts, 1);
+                return `<div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">
+                  <strong style="color:#fff">${p.question}</strong>
+                  <div style="font-size:12px;color:var(--muted);margin:4px 0 10px">Encerra: ${formatDate(p.ends_at)} — ${total} votos</div>
+                  ${p.options.map((opt, i) => `
+                    <div style="margin-bottom:8px">
+                      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+                        <span>${opt}</span><span style="color:var(--muted)">${p.voteCounts[i]} votos</span>
+                      </div>
+                      <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden">
+                        <div style="height:100%;background:var(--accent);width:${Math.round((p.voteCounts[i] / maxVotes) * 100)}%;border-radius:4px"></div>
+                      </div>
+                    </div>`).join("")}
+                </div>`;
+              }).join("")}
+        </div>
+        <div class="card">
+          <div class="section-header"><h3>Encerradas recentemente</h3></div>
+          ${ended.length === 0
+            ? '<p style="color:var(--muted);font-size:14px">Nenhuma enquete encerrada.</p>'
+            : `<div class="table-wrap"><table>
+                <thead><tr><th>Pergunta</th><th>Encerrada em</th></tr></thead>
+                <tbody>${ended.map((p) => `<tr><td>${p.question}</td><td style="color:var(--muted);font-size:13px">${formatDate(p.ends_at)}</td></tr>`).join("")}</tbody>
+              </table></div>`}
+        </div>
+      `;
+    } catch (err) {
+      document.getElementById("content").innerHTML = `<div class="alert alert-danger">Erro: ${err.message}</div>`;
+    }
+  }
+  load();
+</script>
+</body>
+</html>

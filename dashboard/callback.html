@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Autenticando…</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body { display: flex; align-items: center; justify-content: center; }
+    .box { text-align: center; }
+    .box p { color: var(--muted); margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="spinner"></div>
+    <p>Autenticando com Discord…</p>
+  </div>
+
+  <script type="module">
+    import { handleCallback } from "./js/api.js";
+    handleCallback();
+  </script>
+</body>
+</html>

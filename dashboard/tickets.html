@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tickets — Bot Admin</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+
+  <main class="content">
+    <div class="topbar">
+      <h2>🎫 Tickets</h2>
+      <div class="user-info">
+        <img class="avatar" id="userAvatar" src="" alt="" />
+        <span id="username"></span>
+      </div>
+    </div>
+
+    <div id="content"><div class="spinner"></div></div>
+  </main>
+</div>
+
+<script type="module">
+  import { isLoggedIn, getTickets, getStoredGuild, logout } from "./js/api.js";
+  import { sidebarHTML } from "./js/sidebar.js";
+  import { formatDate } from "./js/layout.js";
+
+  if (!isLoggedIn()) { window.location.href = "/index.html"; }
+  const guildId = getStoredGuild();
+  if (!guildId) { window.location.href = "/guilds.html"; }
+
+  document.getElementById("sidebar").innerHTML = sidebarHTML();
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  document.getElementById("changeGuildBtn")?.addEventListener("click", () => window.location.href = "/guilds.html");
+  document.querySelectorAll("nav.sidebar a[data-page]").forEach((a) => {
+    if (a.dataset.page === "tickets") a.classList.add("active");
+  });
+
+  async function load() {
+    try {
+      const { tickets, total, stats } = await getTickets(guildId, { limit: 50 });
+
+      document.getElementById("content").innerHTML = `
+        <div class="grid grid-3" style="margin-bottom:24px">
+          <div class="stat-card">
+            <div class="stat-icon">🟢</div>
+            <div class="stat-value">${stats.active}</div>
+            <div class="stat-label">Abertos agora</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📬</div>
+            <div class="stat-value">${stats.opened}</div>
+            <div class="stat-label">Total abertos</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-value">${stats.closed}</div>
+            <div class="stat-label">Total fechados</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-header">
+            <h3>Tickets ativos (${total})</h3>
+          </div>
+          ${tickets.length === 0
+            ? '<p style="color:var(--muted);font-size:14px;padding:8px 0">Nenhum ticket aberto no momento.</p>'
+            : `<div class="table-wrap">
+                <table>
+                  <thead><tr><th>Canal ID</th><th>Tipo</th><th>Aberto por</th><th>Assumido por</th><th>Aberto em</th><th>Última atividade</th></tr></thead>
+                  <tbody>
+                    ${tickets.map((t) => `
+                      <tr>
+                        <td style="font-size:12px;color:var(--muted)">${t.channel_id}</td>
+                        <td><span class="badge badge-blue">${t.type_value ?? '—'}</span></td>
+                        <td style="font-size:12px">${t.opener_id}</td>
+                        <td style="font-size:12px;color:var(--muted)">${t.claimed_by ?? '—'}</td>
+                        <td style="font-size:12px;color:var(--muted)">${formatDate(t.opened_at)}</td>
+                        <td style="font-size:12px;color:var(--muted)">${formatDate(t.last_activity_at)}</td>
+                      </tr>`).join("")}
+                  </tbody>
+                </table>
+              </div>`}
+        </div>
+      `;
+    } catch (err) {
+      document.getElementById("content").innerHTML =
+        `<div class="alert alert-danger">Erro ao carregar: ${err.message}</div>`;
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>

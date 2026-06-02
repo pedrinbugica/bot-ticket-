@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XP e Níveis — Bot Admin</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+
+  <main class="content">
+    <div class="topbar">
+      <h2>⭐ XP e Níveis</h2>
+      <div class="user-info">
+        <img class="avatar" id="userAvatar" src="" alt="" />
+        <span id="username"></span>
+      </div>
+    </div>
+
+    <div id="content"><div class="spinner"></div></div>
+  </main>
+</div>
+
+<script type="module">
+  import { isLoggedIn, getLeaderboard, getLevelingSettings, patchLevelingSettings, deleteLevelRole, getStoredGuild, logout } from "./js/api.js";
+  import { sidebarHTML } from "./js/sidebar.js";
+
+  if (!isLoggedIn()) { window.location.href = "/index.html"; }
+  const guildId = getStoredGuild();
+  if (!guildId) { window.location.href = "/guilds.html"; }
+
+  document.getElementById("sidebar").innerHTML = sidebarHTML();
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  document.getElementById("changeGuildBtn")?.addEventListener("click", () => window.location.href = "/guilds.html");
+  document.querySelectorAll("nav.sidebar a[data-page]").forEach((a) => {
+    if (a.dataset.page === "leveling") a.classList.add("active");
+  });
+
+  async function load() {
+    try {
+      const [lbData, settData] = await Promise.all([
+        getLeaderboard(guildId, 20),
+        getLevelingSettings(guildId),
+      ]);
+      const { entries, total } = lbData;
+      const { settings, roles } = settData;
+      const maxXp = entries[0]?.xp ?? 1;
+
+      document.getElementById("content").innerHTML = `
+        <div class="grid grid-2" style="gap:20px">
+
+          <!-- Leaderboard -->
+          <div class="card">
+            <div class="section-header">
+              <h3>🏆 Ranking (${total} membros)</h3>
+            </div>
+            ${entries.length === 0
+              ? '<p style="color:var(--muted);font-size:14px">Nenhum usuário com XP ainda.</p>'
+              : entries.map((u, i) => `
+                  <div class="rank-row">
+                    <div class="rank-num ${i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : ''}">${i + 1}</div>
+                    <div style="flex:1">
+                      <div style="font-size:13px;color:var(--text)">Nível ${u.level}</div>
+                      <div style="font-size:11px;color:var(--muted)">${u.user_id}</div>
+                    </div>
+                    <div class="xp-bar-wrap" style="max-width:80px"><div class="xp-bar" style="width:${Math.round((u.xp / maxXp) * 100)}%"></div></div>
+                    <div class="rank-xp" style="min-width:70px;text-align:right">${u.xp.toLocaleString("pt-BR")} XP</div>
+                  </div>`).join("")}
+          </div>
+
+          <!-- Configurações -->
+          <div>
+            <div class="card" style="margin-bottom:16px">
+              <div class="section-header"><h3>⚙️ Configurações de XP</h3></div>
+              <div class="form-group">
+                <label>Sistema ativo</label>
+                <label class="toggle">
+                  <input type="checkbox" id="xpEnabled" ${settings.enabled ? "checked" : ""} />
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="form-group">
+                <label>XP por mensagem</label>
+                <input class="form-control" type="number" id="xpPerMsg" value="${settings.xp_per_message ?? 15}" min="1" max="100" />
+              </div>
+              <div class="form-group">
+                <label>Cooldown (segundos)</label>
+                <input class="form-control" type="number" id="xpCooldown" value="${settings.xp_cooldown_secs ?? 60}" min="0" max="3600" />
+              </div>
+              <div class="form-group">
+                <label>Canal de level-up (ID)</label>
+                <input class="form-control" type="text" id="levelupChannel" value="${settings.levelup_channel_id ?? ''}" placeholder="ID do canal ou vazio" />
+              </div>
+              <button class="btn btn-primary" id="saveXp">Salvar</button>
+              <span id="saveMsg" style="font-size:13px;color:var(--green);margin-left:10px;display:none">✅ Salvo!</span>
+            </div>
+
+            <!-- Recompensas -->
+            <div class="card">
+              <div class="section-header"><h3>🎁 Recompensas por nível</h3></div>
+              ${roles.length === 0
+                ? '<p style="color:var(--muted);font-size:14px">Nenhuma recompensa configurada.<br>Use <code>/xp recompensa-adicionar</code> no Discord.</p>'
+                : `<table>
+                    <thead><tr><th>Nível</th><th>Cargo ID</th><th></th></tr></thead>
+                    <tbody>
+                      ${roles.map((r) => `
+                        <tr>
+                          <td><strong>Nível ${r.level_required}</strong></td>
+                          <td style="font-size:12px;color:var(--muted)">${r.role_id}</td>
+                          <td><button class="btn btn-danger btn-sm" onclick="removeRole(${r.level_required})">Remover</button></td>
+                        </tr>`).join("")}
+                    </tbody>
+                  </table>`}
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById("saveXp").addEventListener("click", async () => {
+        const btn = document.getElementById("saveXp");
+        btn.disabled = true;
+        btn.textContent = "Salvando…";
+        try {
+          await patchLevelingSettings(guildId, {
+            enabled: document.getElementById("xpEnabled").checked ? 1 : 0,
+            xp_per_message: Number(document.getElementById("xpPerMsg").value),
+            xp_cooldown_secs: Number(document.getElementById("xpCooldown").value),
+            levelup_channel_id: document.getElementById("levelupChannel").value || null,
+          });
+          const msg = document.getElementById("saveMsg");
+          msg.style.display = "inline";
+          setTimeout(() => msg.style.display = "none", 3000);
+        } catch (err) {
+          alert("Erro: " + err.message);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Salvar";
+        }
+      });
+
+      window.removeRole = async function(level) {
+        if (!confirm(`Remover recompensa do nível ${level}?`)) return;
+        try {
+          await deleteLevelRole(guildId, level);
+          load();
+        } catch (err) {
+          alert("Erro: " + err.message);
+        }
+      };
+    } catch (err) {
+      document.getElementById("content").innerHTML =
+        `<div class="alert alert-danger">Erro ao carregar: ${err.message}</div>`;
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>

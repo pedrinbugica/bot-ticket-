@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Auto-moderação — Bot Admin</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="content">
+    <div class="topbar">
+      <h2>🛡️ Auto-moderação</h2>
+      <div class="user-info"><img class="avatar" id="userAvatar" src="" alt="" /><span id="username"></span></div>
+    </div>
+    <div id="content"><div class="spinner"></div></div>
+  </main>
+</div>
+<script type="module">
+  import { isLoggedIn, getModules, patchModule, addAutomodWord, deleteAutomodWord, getStoredGuild, logout } from "./js/api.js";
+  import { sidebarHTML } from "./js/sidebar.js";
+
+  if (!isLoggedIn()) { window.location.href = "/index.html"; }
+  const guildId = getStoredGuild();
+  if (!guildId) { window.location.href = "/guilds.html"; }
+  document.getElementById("sidebar").innerHTML = sidebarHTML();
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  document.getElementById("changeGuildBtn")?.addEventListener("click", () => window.location.href = "/guilds.html");
+  document.querySelectorAll("nav.sidebar a[data-page]").forEach((a) => { if (a.dataset.page === "automod") a.classList.add("active"); });
+
+  async function load() {
+    try {
+      const data = await getModules(guildId);
+      const s = data.automod ?? {};
+      const words = data.badWords ?? [];
+
+      document.getElementById("content").innerHTML = `
+        <div class="grid grid-2" style="gap:20px">
+          <div class="card">
+            <div class="section-header"><h3>Configurações gerais</h3></div>
+
+            <div class="toggle-row">
+              <div class="label"><h4>Filtro de palavras</h4><p>Bloqueia palavras proibidas</p></div>
+              <label class="toggle"><input type="checkbox" id="wordFilter" ${s.word_filter_enabled ? "checked" : ""} /><span class="slider"></span></label>
+            </div>
+            <div class="form-group" style="margin-top:12px">
+              <label>Ação do filtro de palavras</label>
+              <select class="form-control" id="wordAction">
+                <option value="delete" ${s.word_filter_action === 'delete' ? 'selected' : ''}>Deletar mensagem</option>
+                <option value="warn"   ${s.word_filter_action === 'warn'   ? 'selected' : ''}>Avisar usuário</option>
+                <option value="mute"   ${s.word_filter_action === 'mute'   ? 'selected' : ''}>Silenciar usuário</option>
+              </select>
+            </div>
+
+            <div class="toggle-row">
+              <div class="label"><h4>Anti-spam</h4><p>Detecta mensagens em excesso</p></div>
+              <label class="toggle"><input type="checkbox" id="spamEnabled" ${s.spam_enabled ? "checked" : ""} /><span class="slider"></span></label>
+            </div>
+            <div class="grid grid-2" style="gap:10px;margin:10px 0">
+              <div class="form-group">
+                <label>Máx. mensagens</label>
+                <input class="form-control" type="number" id="spamMsgs" value="${s.spam_msg_count ?? 5}" min="2" max="20" />
+              </div>
+              <div class="form-group">
+                <label>Em X segundos</label>
+                <input class="form-control" type="number" id="spamSecs" value="${s.spam_window_secs ?? 5}" min="1" max="60" />
+              </div>
+            </div>
+
+            <div class="toggle-row">
+              <div class="label"><h4>Filtro de links</h4><p>Bloqueia links e convites</p></div>
+              <label class="toggle"><input type="checkbox" id="linkFilter" ${s.link_filter_enabled ? "checked" : ""} /><span class="slider"></span></label>
+            </div>
+
+            <div class="toggle-row">
+              <div class="label"><h4>Anti-raid</h4><p>Alerta em entrada em massa</p></div>
+              <label class="toggle"><input type="checkbox" id="raidEnabled" ${s.raid_enabled ? "checked" : ""} /><span class="slider"></span></label>
+            </div>
+
+            <button class="btn btn-primary" id="saveBtn" style="margin-top:16px">Salvar</button>
+            <span id="saveMsg" style="font-size:13px;color:var(--green);margin-left:10px;display:none">✅ Salvo!</span>
+          </div>
+
+          <div class="card">
+            <div class="section-header"><h3>Palavras proibidas (${words.length})</h3></div>
+            <div style="display:flex;gap:8px;margin-bottom:14px">
+              <input class="form-control" id="newWord" placeholder="Palavra..." style="flex:1" />
+              <select class="form-control" id="newWordAction" style="width:130px">
+                <option value="delete">Deletar</option>
+                <option value="warn">Avisar</option>
+                <option value="mute">Silenciar</option>
+              </select>
+              <button class="btn btn-primary" id="addWordBtn">+</button>
+            </div>
+            <div id="wordsList" style="max-height:340px;overflow-y:auto">
+              ${words.length === 0
+                ? '<p style="color:var(--muted);font-size:13px">Nenhuma palavra proibida.</p>'
+                : words.map((w) => `
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)" id="word-${btoa(w.word)}">
+                      <span style="font-family:monospace;font-size:13px">${w.word}</span>
+                      <div style="display:flex;align-items:center;gap:8px">
+                        <span class="badge badge-gray">${w.severity}</span>
+                        <button class="btn btn-danger btn-sm" onclick="removeWord('${w.word}')">×</button>
+                      </div>
+                    </div>`).join("")}
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById("saveBtn").addEventListener("click", async () => {
+        const btn = document.getElementById("saveBtn");
+        btn.disabled = true; btn.textContent = "Salvando…";
+        try {
+          await patchModule(guildId, "automod", {
+            word_filter_enabled: document.getElementById("wordFilter").checked ? 1 : 0,
+            word_filter_action: document.getElementById("wordAction").value,
+            spam_enabled: document.getElementById("spamEnabled").checked ? 1 : 0,
+            spam_msg_count: Number(document.getElementById("spamMsgs").value),
+            spam_window_secs: Number(document.getElementById("spamSecs").value),
+            link_filter_enabled: document.getElementById("linkFilter").checked ? 1 : 0,
+            raid_enabled: document.getElementById("raidEnabled").checked ? 1 : 0,
+          });
+          const msg = document.getElementById("saveMsg");
+          msg.style.display = "inline"; setTimeout(() => msg.style.display = "none", 3000);
+        } catch (err) { alert("Erro: " + err.message); }
+        finally { btn.disabled = false; btn.textContent = "Salvar"; }
+      });
+
+      document.getElementById("addWordBtn").addEventListener("click", async () => {
+        const word = document.getElementById("newWord").value.trim();
+        const action = document.getElementById("newWordAction").value;
+        if (!word) return;
+        try {
+          await addAutomodWord(guildId, word, action);
+          document.getElementById("newWord").value = "";
+          load();
+        } catch (err) { alert("Erro: " + err.message); }
+      });
+
+      window.removeWord = async function(word) {
+        try {
+          await deleteAutomodWord(guildId, word);
+          load();
+        } catch (err) { alert("Erro: " + err.message); }
+      };
+    } catch (err) {
+      document.getElementById("content").innerHTML = `<div class="alert alert-danger">Erro: ${err.message}</div>`;
+    }
+  }
+  load();
+</script>
+</body>
+</html>

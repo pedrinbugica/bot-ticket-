@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Logs — Bot Admin</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="content">
+    <div class="topbar">
+      <h2>📋 Logs do Servidor</h2>
+      <div class="user-info"><img class="avatar" id="userAvatar" src="" alt="" /><span id="username"></span></div>
+    </div>
+    <div id="content"><div class="spinner"></div></div>
+  </main>
+</div>
+<script type="module">
+  import { isLoggedIn, getModules, patchModule, getStoredGuild, logout } from "./js/api.js";
+  import { sidebarHTML } from "./js/sidebar.js";
+
+  if (!isLoggedIn()) { window.location.href = "/index.html"; }
+  const guildId = getStoredGuild();
+  if (!guildId) { window.location.href = "/guilds.html"; }
+  document.getElementById("sidebar").innerHTML = sidebarHTML();
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  document.getElementById("changeGuildBtn")?.addEventListener("click", () => window.location.href = "/guilds.html");
+  document.querySelectorAll("nav.sidebar a[data-page]").forEach((a) => { if (a.dataset.page === "logs") a.classList.add("active"); });
+
+  const EVENT_LABELS = {
+    message_edit:    "Mensagem editada",
+    message_delete:  "Mensagem apagada",
+    member_join:     "Membro entrou",
+    member_leave:    "Membro saiu",
+    member_ban:      "Membro banido",
+    member_unban:    "Membro desbanido",
+    role_change:     "Cargo alterado",
+    nickname_change: "Apelido alterado",
+  };
+
+  async function load() {
+    try {
+      const data = await getModules(guildId);
+      const logs = data.logs ?? {};
+      const allEvents = logs.allEvents ?? [];
+      let enabled = [];
+      try { enabled = JSON.parse(logs.events_enabled ?? "[]"); } catch {}
+
+      document.getElementById("content").innerHTML = `
+        <div class="card" style="max-width:520px">
+          <div class="form-group">
+            <label>Canal de logs (ID)</label>
+            <input class="form-control" id="logChannel" value="${logs.log_channel_id ?? ''}" placeholder="ID do canal" />
+          </div>
+          <div class="section-header" style="margin-top:16px"><h3>Eventos monitorados</h3></div>
+          ${allEvents.map((ev) => `
+            <div class="toggle-row">
+              <div class="label"><h4>${EVENT_LABELS[ev] ?? ev}</h4></div>
+              <label class="toggle">
+                <input type="checkbox" class="event-toggle" data-event="${ev}" ${enabled.includes(ev) ? "checked" : ""} />
+                <span class="slider"></span>
+              </label>
+            </div>`).join("")}
+          <button class="btn btn-primary" id="saveBtn" style="margin-top:16px">Salvar</button>
+          <span id="saveMsg" style="font-size:13px;color:var(--green);margin-left:10px;display:none">✅ Salvo!</span>
+        </div>
+      `;
+
+      document.getElementById("saveBtn").addEventListener("click", async () => {
+        const btn = document.getElementById("saveBtn");
+        btn.disabled = true; btn.textContent = "Salvando…";
+        const selectedEvents = [...document.querySelectorAll(".event-toggle:checked")].map((c) => c.dataset.event);
+        try {
+          await patchModule(guildId, "logs", {
+            log_channel_id: document.getElementById("logChannel").value || null,
+            events_enabled: selectedEvents,
+          });
+          const msg = document.getElementById("saveMsg");
+          msg.style.display = "inline"; setTimeout(() => msg.style.display = "none", 3000);
+        } catch (err) { alert("Erro: " + err.message); }
+        finally { btn.disabled = false; btn.textContent = "Salvar"; }
+      });
+    } catch (err) {
+      document.getElementById("content").innerHTML = `<div class="alert alert-danger">Erro: ${err.message}</div>`;
+    }
+  }
+  load();
+</script>
+</body>
+</html>

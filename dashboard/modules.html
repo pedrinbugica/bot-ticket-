@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Módulos — Bot Admin</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+
+  <main class="content">
+    <div class="topbar">
+      <h2>🔧 Módulos</h2>
+      <div class="user-info">
+        <img class="avatar" id="userAvatar" src="" alt="" />
+        <span id="username"></span>
+      </div>
+    </div>
+
+    <div id="content"><div class="spinner"></div></div>
+  </main>
+</div>
+
+<script type="module">
+  import { isLoggedIn, getModules, getStoredGuild, logout } from "./js/api.js";
+  import { sidebarHTML } from "./js/sidebar.js";
+
+  if (!isLoggedIn()) { window.location.href = "/index.html"; }
+  const guildId = getStoredGuild();
+  if (!guildId) { window.location.href = "/guilds.html"; }
+
+  document.getElementById("sidebar").innerHTML = sidebarHTML();
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  document.getElementById("changeGuildBtn")?.addEventListener("click", () => window.location.href = "/guilds.html");
+  document.querySelectorAll("nav.sidebar a[data-page]").forEach((a) => {
+    if (a.dataset.page === "modules") a.classList.add("active");
+  });
+
+  const MODULES = [
+    { key: "tickets",   icon: "🎫", name: "Tickets",       page: null,                 check: (d) => !!d.tickets },
+    { key: "welcome",   icon: "👋", name: "Boas-vindas",   page: "module-welcome.html", check: (d) => !!d.welcome?.welcome_channel_id },
+    { key: "logs",      icon: "📋", name: "Logs",          page: "module-logs.html",    check: (d) => !!d.logs?.log_channel_id },
+    { key: "automod",   icon: "🛡️", name: "Auto-mod",      page: "module-automod.html", check: (d) => !!(d.automod?.word_filter_enabled || d.automod?.spam_enabled || d.automod?.link_filter_enabled) },
+    { key: "leveling",  icon: "⭐", name: "XP/Níveis",     page: "leveling.html",       check: (d) => !!d.leveling?.enabled },
+    { key: "starboard", icon: "⭐", name: "Starboard",     page: null,                  check: (d) => !!d.starboard?.enabled },
+    { key: "jtc",       icon: "🎮", name: "Join-to-Create",page: null,                  check: (d) => !!d.jtc },
+    { key: "birthdays", icon: "🎂", name: "Aniversários",  page: "birthdays.html",      check: (d) => !!d.birthdays?.channel_id },
+    { key: "counting",  icon: "🔢", name: "Counting",      page: null,                  check: (d) => !!d.counting?.channel_id },
+    { key: "tags",      icon: "💬", name: "Tags",          page: "tags.html",           check: () => true },
+    { key: "giveaways", icon: "🎉", name: "Sorteios",      page: "giveaways.html",      check: () => true },
+    { key: "polls",     icon: "📊", name: "Enquetes",      page: "polls.html",          check: () => true },
+    { key: "scheduled", icon: "📅", name: "Agendamentos",  page: "scheduled.html",      check: () => true },
+  ];
+
+  async function load() {
+    try {
+      const data = await getModules(guildId);
+
+      document.getElementById("content").innerHTML = `
+        <p style="color:var(--muted);font-size:14px;margin-bottom:20px">
+          Clique em um módulo para configurá-lo. O status "Ativo" indica que o módulo tem canal/configuração definida.
+        </p>
+        <div class="module-grid">
+          ${MODULES.map((m) => {
+            const enabled = m.check(data);
+            const tag = m.page ? `<a href="/${m.page}" class="module-card">` : `<div class="module-card" style="cursor:default">`;
+            const closeTag = m.page ? `</a>` : `</div>`;
+            return `${tag}
+              <div class="module-icon">${m.icon}</div>
+              <div class="module-name">${m.name}</div>
+              <div class="module-status">
+                <span class="badge ${enabled ? 'badge-green' : 'badge-gray'}">${enabled ? 'Ativo' : 'Inativo'}</span>
+                ${!m.page ? '<span style="font-size:11px;color:var(--muted);display:block;margin-top:4px">Config via Discord</span>' : ''}
+              </div>
+            ${closeTag}`;
+          }).join("")}
+        </div>
+      `;
+    } catch (err) {
+      document.getElementById("content").innerHTML =
+        `<div class="alert alert-danger">Erro ao carregar: ${err.message}</div>`;
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>

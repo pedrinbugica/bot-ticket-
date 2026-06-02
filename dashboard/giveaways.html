@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sorteios — Bot Admin</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="content">
+    <div class="topbar">
+      <h2>🎉 Sorteios</h2>
+      <div class="user-info"><img class="avatar" id="userAvatar" src="" alt="" /><span id="username"></span></div>
+    </div>
+    <div id="content"><div class="spinner"></div></div>
+  </main>
+</div>
+<script type="module">
+  import { isLoggedIn, getGiveaways, getStoredGuild, logout } from "./js/api.js";
+  import { sidebarHTML } from "./js/sidebar.js";
+  import { formatDate } from "./js/layout.js";
+
+  if (!isLoggedIn()) { window.location.href = "/index.html"; }
+  const guildId = getStoredGuild();
+  if (!guildId) { window.location.href = "/guilds.html"; }
+  document.getElementById("sidebar").innerHTML = sidebarHTML();
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  document.getElementById("changeGuildBtn")?.addEventListener("click", () => window.location.href = "/guilds.html");
+  document.querySelectorAll("nav.sidebar a[data-page]").forEach((a) => { if (a.dataset.page === "giveaways") a.classList.add("active"); });
+
+  async function load() {
+    try {
+      const { active, ended } = await getGiveaways(guildId);
+      document.getElementById("content").innerHTML = `
+        <div class="alert alert-info">Para criar sorteios, use <code>/sorteio criar</code> no Discord.</div>
+
+        <div class="card" style="margin-bottom:16px">
+          <div class="section-header"><h3>Sorteios ativos (${active.length})</h3></div>
+          ${active.length === 0
+            ? '<p style="color:var(--muted);font-size:14px">Nenhum sorteio ativo.</p>'
+            : `<div class="table-wrap"><table>
+                <thead><tr><th>Prêmio</th><th>Participantes</th><th>Vencedores</th><th>Encerra em</th></tr></thead>
+                <tbody>
+                  ${active.map((g) => `
+                    <tr>
+                      <td><strong>${g.prize}</strong></td>
+                      <td>${g.entryCount}</td>
+                      <td>${g.winner_count}</td>
+                      <td style="color:var(--yellow)">${formatDate(g.ends_at)}</td>
+                    </tr>`).join("")}
+                </tbody>
+              </table></div>`}
+        </div>
+
+        <div class="card">
+          <div class="section-header"><h3>Encerrados recentemente</h3></div>
+          ${ended.length === 0
+            ? '<p style="color:var(--muted);font-size:14px">Nenhum sorteio encerrado.</p>'
+            : `<div class="table-wrap"><table>
+                <thead><tr><th>Prêmio</th><th>Encerrado em</th></tr></thead>
+                <tbody>
+                  ${ended.map((g) => `
+                    <tr>
+                      <td>${g.prize}</td>
+                      <td style="color:var(--muted)">${formatDate(g.ends_at)}</td>
+                    </tr>`).join("")}
+                </tbody>
+              </table></div>`}
+        </div>
+      `;
+    } catch (err) {
+      document.getElementById("content").innerHTML = `<div class="alert alert-danger">Erro: ${err.message}</div>`;
+    }
+  }
+  load();
+</script>
+</body>
+</html>

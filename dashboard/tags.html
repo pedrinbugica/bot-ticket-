@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tags — Bot Admin</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="content">
+    <div class="topbar">
+      <h2>💬 Tags</h2>
+      <div class="user-info"><img class="avatar" id="userAvatar" src="" alt="" /><span id="username"></span></div>
+    </div>
+    <div id="content"><div class="spinner"></div></div>
+  </main>
+</div>
+<script type="module">
+  import { isLoggedIn, getTags, createTag, deleteTag, getStoredGuild, logout } from "./js/api.js";
+  import { sidebarHTML } from "./js/sidebar.js";
+
+  if (!isLoggedIn()) { window.location.href = "/index.html"; }
+  const guildId = getStoredGuild();
+  if (!guildId) { window.location.href = "/guilds.html"; }
+  document.getElementById("sidebar").innerHTML = sidebarHTML();
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  document.getElementById("changeGuildBtn")?.addEventListener("click", () => window.location.href = "/guilds.html");
+  document.querySelectorAll("nav.sidebar a[data-page]").forEach((a) => { if (a.dataset.page === "tags") a.classList.add("active"); });
+
+  async function load() {
+    try {
+      const { tags, settings } = await getTags(guildId);
+      document.getElementById("content").innerHTML = `
+        <div class="card" style="margin-bottom:20px">
+          <div class="section-header"><h3>Nova tag</h3></div>
+          <p style="color:var(--muted);font-size:13px;margin-bottom:12px">Prefixo atual: <code>${settings.prefix}</code></p>
+          <div class="grid grid-2" style="gap:12px">
+            <div class="form-group"><label>Nome da tag</label>
+              <input class="form-control" id="newTrigger" placeholder="ajuda" /></div>
+            <div class="form-group"><label>Resposta</label>
+              <input class="form-control" id="newResponse" placeholder="Texto da resposta..." /></div>
+          </div>
+          <button class="btn btn-primary" id="addTagBtn">Criar tag</button>
+        </div>
+
+        <div class="card">
+          <div class="section-header"><h3>Tags (${tags.length} / 100)</h3></div>
+          ${tags.length === 0
+            ? '<p style="color:var(--muted);font-size:14px">Nenhuma tag criada.</p>'
+            : `<div class="table-wrap"><table>
+                <thead><tr><th>Tag</th><th>Resposta</th><th>Usos</th><th></th></tr></thead>
+                <tbody>
+                  ${tags.map((t) => `
+                    <tr>
+                      <td><code>${settings.prefix}${t.trigger}</code></td>
+                      <td style="font-size:13px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.response}</td>
+                      <td style="color:var(--muted)">${t.uses_count ?? 0}</td>
+                      <td><button class="btn btn-danger btn-sm" onclick="removeTag('${t.trigger}')">Remover</button></td>
+                    </tr>`).join("")}
+                </tbody>
+              </table></div>`}
+        </div>
+      `;
+
+      document.getElementById("addTagBtn").addEventListener("click", async () => {
+        const trigger = document.getElementById("newTrigger").value.trim();
+        const response = document.getElementById("newResponse").value.trim();
+        if (!trigger || !response) { alert("Preencha o nome e a resposta."); return; }
+        try {
+          await createTag(guildId, trigger, response);
+          document.getElementById("newTrigger").value = "";
+          document.getElementById("newResponse").value = "";
+          load();
+        } catch (err) { alert("Erro: " + err.message); }
+      });
+
+      window.removeTag = async function(trigger) {
+        if (!confirm(`Remover tag "${trigger}"?`)) return;
+        try { await deleteTag(guildId, trigger); load(); }
+        catch (err) { alert("Erro: " + err.message); }
+      };
+    } catch (err) {
+      document.getElementById("content").innerHTML = `<div class="alert alert-danger">Erro: ${err.message}</div>`;
+    }
+  }
+  load();
+</script>
+</body>
+</html>

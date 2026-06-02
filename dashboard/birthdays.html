@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aniversários — Bot Admin</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="content">
+    <div class="topbar">
+      <h2>🎂 Aniversários</h2>
+      <div class="user-info"><img class="avatar" id="userAvatar" src="" alt="" /><span id="username"></span></div>
+    </div>
+    <div id="content"><div class="spinner"></div></div>
+  </main>
+</div>
+<script type="module">
+  import { isLoggedIn, getBirthdays, patchModule, getStoredGuild, logout } from "./js/api.js";
+  import { sidebarHTML } from "./js/sidebar.js";
+
+  const MONTHS = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+
+  if (!isLoggedIn()) { window.location.href = "/index.html"; }
+  const guildId = getStoredGuild();
+  if (!guildId) { window.location.href = "/guilds.html"; }
+  document.getElementById("sidebar").innerHTML = sidebarHTML();
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  document.getElementById("changeGuildBtn")?.addEventListener("click", () => window.location.href = "/guilds.html");
+  document.querySelectorAll("nav.sidebar a[data-page]").forEach((a) => { if (a.dataset.page === "birthdays") a.classList.add("active"); });
+
+  async function load() {
+    try {
+      const { settings, birthdays } = await getBirthdays(guildId);
+      document.getElementById("content").innerHTML = `
+        <div class="grid grid-2" style="gap:20px">
+          <div class="card">
+            <div class="section-header"><h3>⚙️ Configuração</h3></div>
+            <div class="form-group"><label>Canal de parabéns (ID)</label>
+              <input class="form-control" id="bdChannel" value="${settings?.channel_id ?? ''}" placeholder="ID do canal" /></div>
+            <div class="form-group"><label>Mensagem personalizada</label>
+              <textarea class="form-control" id="bdMsg" rows="3" placeholder="🎂 Hoje é aniversário de {usuario}! 🎉">${settings?.message ?? ''}</textarea></div>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Use <code>{usuario}</code> para mencionar o membro.</p>
+            <button class="btn btn-primary" id="saveBtn">Salvar</button>
+            <span id="saveMsg" style="font-size:13px;color:var(--green);margin-left:10px;display:none">✅ Salvo!</span>
+          </div>
+
+          <div class="card">
+            <div class="section-header"><h3>🎂 Aniversariantes (${birthdays.length})</h3></div>
+            ${birthdays.length === 0
+              ? '<p style="color:var(--muted);font-size:14px">Nenhum aniversário registrado.</p>'
+              : `<div class="table-wrap" style="max-height:400px;overflow-y:auto"><table>
+                  <thead><tr><th>Usuário ID</th><th>Data</th></tr></thead>
+                  <tbody>
+                    ${birthdays.map((b) => `
+                      <tr>
+                        <td style="font-size:12px">${b.user_id}</td>
+                        <td style="font-size:13px">${b.day} de ${MONTHS[b.month - 1]}</td>
+                      </tr>`).join("")}
+                  </tbody>
+                </table></div>`}
+          </div>
+        </div>
+      `;
+
+      document.getElementById("saveBtn").addEventListener("click", async () => {
+        const btn = document.getElementById("saveBtn");
+        btn.disabled = true; btn.textContent = "Salvando…";
+        try {
+          await patchModule(guildId, "birthdays", {
+            channel_id: document.getElementById("bdChannel").value || null,
+            message: document.getElementById("bdMsg").value || null,
+          });
+          const msg = document.getElementById("saveMsg");
+          msg.style.display = "inline"; setTimeout(() => msg.style.display = "none", 3000);
+        } catch (err) { alert("Erro: " + err.message); }
+        finally { btn.disabled = false; btn.textContent = "Salvar"; }
+      });
+    } catch (err) {
+      document.getElementById("content").innerHTML = `<div class="alert alert-danger">Erro: ${err.message}</div>`;
+    }
+  }
+  load();
+</script>
+</body>
+</html>

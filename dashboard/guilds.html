@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Selecionar Servidor — Bot Admin</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body { display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+    .guilds-container { width: 100%; max-width: 600px; }
+    .guilds-container h1 { font-size: 22px; color: #fff; margin-bottom: 6px; }
+    .guilds-container p  { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+    .guild-list { display: flex; flex-direction: column; gap: 10px; }
+    .guild-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      cursor: pointer;
+      transition: border-color 0.12s;
+      text-decoration: none;
+    }
+    .guild-item:hover { border-color: var(--accent); }
+    .guild-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--bg-code);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .guild-icon img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .guild-info h3 { font-size: 15px; color: #fff; }
+    .guild-info p  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .guild-arrow { margin-left: auto; color: var(--muted); font-size: 18px; }
+    .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .logout-link { font-size: 13px; color: var(--muted); cursor: pointer; text-decoration: none; }
+    .logout-link:hover { color: var(--red); }
+  </style>
+</head>
+<body>
+  <div class="guilds-container">
+    <div class="header-row">
+      <h1>🤖 Selecione um servidor</h1>
+      <span class="logout-link" id="logoutBtn">Sair</span>
+    </div>
+    <p>Escolha qual servidor quer administrar. Só aparecem servidores onde você é admin e o bot está presente.</p>
+    <div class="guild-list" id="guildList">
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { isLoggedIn, getGuilds, setStoredGuild, logout } from "./js/api.js";
+
+    if (!isLoggedIn()) window.location.href = "/index.html";
+
+    document.getElementById("logoutBtn").addEventListener("click", logout);
+
+    async function loadGuilds() {
+      try {
+        const { guilds } = await getGuilds();
+        const list = document.getElementById("guildList");
+
+        if (!guilds.length) {
+          list.innerHTML = '<div class="alert alert-warning">Nenhum servidor encontrado. O bot precisa estar no servidor e você precisa ser administrador.</div>';
+          return;
+        }
+
+        list.innerHTML = guilds.map((g) => `
+          <div class="guild-item" data-id="${g.id}">
+            <div class="guild-icon">
+              ${g.icon ? `<img src="${g.icon}" alt="${g.name}" />` : "🤖"}
+            </div>
+            <div class="guild-info">
+              <h3>${g.name}</h3>
+              <p>${g.memberCount?.toLocaleString("pt-BR") ?? "?"} membros</p>
+            </div>
+            <span class="guild-arrow">›</span>
+          </div>
+        `).join("");
+
+        list.querySelectorAll(".guild-item").forEach((el) => {
+          el.addEventListener("click", () => {
+            setStoredGuild(el.dataset.id);
+            window.location.href = "/overview.html";
+          });
+        });
+      } catch (err) {
+        document.getElementById("guildList").innerHTML =
+          `<div class="alert alert-danger">Erro ao carregar servidores: ${err.message}</div>`;
+      }
+    }
+
+    loadGuilds();
+  </script>
+</body>
+</html>

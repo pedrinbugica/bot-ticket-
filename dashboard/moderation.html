@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Moderação — Bot Admin</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+
+  <main class="content">
+    <div class="topbar">
+      <h2>🔨 Moderação</h2>
+      <div class="user-info">
+        <img class="avatar" id="userAvatar" src="" alt="" />
+        <span id="username"></span>
+      </div>
+    </div>
+
+    <div id="content"><div class="spinner"></div></div>
+  </main>
+</div>
+
+<script type="module">
+  import { isLoggedIn, getModeration, deleteCase, getStoredGuild, logout } from "./js/api.js";
+  import { sidebarHTML } from "./js/sidebar.js";
+  import { formatDate, actionBadge } from "./js/layout.js";
+
+  if (!isLoggedIn()) { window.location.href = "/index.html"; }
+  const guildId = getStoredGuild();
+  if (!guildId) { window.location.href = "/guilds.html"; }
+
+  document.getElementById("sidebar").innerHTML = sidebarHTML();
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  document.getElementById("changeGuildBtn")?.addEventListener("click", () => window.location.href = "/guilds.html");
+  document.querySelectorAll("nav.sidebar a[data-page]").forEach((a) => {
+    if (a.dataset.page === "moderation") a.classList.add("active");
+  });
+
+  async function load() {
+    try {
+      const { cases, activeMutes, activeBans, totalByAction } = await getModeration(guildId, 50);
+
+      const byAction = {};
+      totalByAction.forEach((r) => byAction[r.action] = r.cnt);
+
+      document.getElementById("content").innerHTML = `
+        <div class="grid grid-4" style="margin-bottom:24px">
+          <div class="stat-card">
+            <div class="stat-icon">⚠️</div>
+            <div class="stat-value">${byAction.warn ?? 0}</div>
+            <div class="stat-label">Avisos ativos</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🔇</div>
+            <div class="stat-value">${activeMutes.length}</div>
+            <div class="stat-label">Mutes ativos</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🔨</div>
+            <div class="stat-value">${activeBans.length}</div>
+            <div class="stat-label">Tempbans ativos</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📋</div>
+            <div class="stat-value">${cases.length}</div>
+            <div class="stat-label">Casos recentes</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-header">
+            <h3>Histórico de casos</h3>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>#</th><th>Ação</th><th>Usuário</th><th>Moderador</th><th>Motivo</th><th>Data</th><th></th></tr>
+              </thead>
+              <tbody id="casesTable">
+                ${cases.map((c) => `
+                  <tr id="case-${c.case_number}">
+                    <td style="color:var(--muted);font-weight:600">#${c.case_number}</td>
+                    <td>${actionBadge(c.action)}</td>
+                    <td style="font-size:12px">${c.user_id}</td>
+                    <td style="font-size:12px;color:var(--muted)">${c.mod_id}</td>
+                    <td style="font-size:13px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.reason ?? '—'}</td>
+                    <td style="font-size:12px;color:var(--muted)">${formatDate(c.created_at)}</td>
+                    <td>
+                      ${c.active ? `<button class="btn btn-ghost btn-sm" onclick="removeCase('${guildId}', ${c.case_number})">Remover</button>` : '<span style="color:var(--muted);font-size:12px">Inativo</span>'}
+                    </td>
+                  </tr>`).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        ${activeBans.length > 0 ? `
+        <div class="card" style="margin-top:20px">
+          <div class="section-header"><h3>Tempbans ativos</h3></div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Usuário</th><th>Motivo</th><th>Expira em</th></tr></thead>
+            <tbody>
+              ${activeBans.map((b) => `
+                <tr>
+                  <td>${b.user_id}</td>
+                  <td style="font-size:13px">${b.reason ?? '—'}</td>
+                  <td style="font-size:13px;color:var(--yellow)">${formatDate(b.expires_at)}</td>
+                </tr>`).join("")}
+            </tbody>
+          </table></div>
+        </div>` : ""}
+      `;
+    } catch (err) {
+      document.getElementById("content").innerHTML =
+        `<div class="alert alert-danger">Erro ao carregar: ${err.message}</div>`;
+    }
+  }
+
+  window.removeCase = async function(guildId, caseNumber) {
+    if (!confirm(`Remover caso #${caseNumber}?`)) return;
+    try {
+      await deleteCase(guildId, caseNumber);
+      document.getElementById(`case-${caseNumber}`)?.remove();
+    } catch (err) {
+      alert("Erro: " + err.message);
+    }
+  };
+
+  load();
+</script>
+</body>
+</html>
