@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Join-to-Create — Bot Admin</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="content">
+    <div class="topbar">
+      <h2>🎮 Join-to-Create</h2>
+      <div class="user-info"><img class="avatar" id="userAvatar" src="" alt="" /><span id="username"></span></div>
+    </div>
+    <div id="content"><div class="spinner"></div></div>
+  </main>
+</div>
+<script type="module">
+  import { isLoggedIn, getModules, patchModule, getStoredGuild, logout } from "./js/api.js";
+  import { sidebarHTML } from "./js/sidebar.js";
+
+  if (!isLoggedIn()) { window.location.href = "/index.html"; }
+  const guildId = getStoredGuild();
+  if (!guildId) { window.location.href = "/guilds.html"; }
+  document.getElementById("sidebar").innerHTML = sidebarHTML();
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  document.getElementById("changeGuildBtn")?.addEventListener("click", () => window.location.href = "/guilds.html");
+  document.querySelectorAll("nav.sidebar a[data-page]").forEach((a) => { if (a.dataset.page === "jtc") a.classList.add("active"); });
+
+  async function load() {
+    try {
+      const data = await getModules(guildId);
+      const j = data.jtc ?? {};
+      const enabled = !!j.trigger_channel_id;
+
+      document.getElementById("content").innerHTML = `
+        <div class="card" style="max-width:600px">
+          <div class="alert alert-info">
+            Quando um membro entrar no canal gatilho, o bot cria uma sala de voz exclusiva para ele e o move para lá. Quando a sala fica vazia, o bot a apaga automaticamente.
+          </div>
+
+          <div class="form-group">
+            <label>Status</label>
+            <div style="display:flex;align-items:center;gap:12px">
+              <label class="toggle">
+                <input type="checkbox" id="jtcEnabled" ${enabled ? "checked" : ""} />
+                <span class="slider"></span>
+              </label>
+              <span id="statusLabel" style="font-size:14px">${enabled ? "✅ Ativo" : "⏸ Inativo"}</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Canal gatilho (ID do canal de voz)</label>
+            <input class="form-control" id="jtcTrigger" value="${j.trigger_channel_id ?? ''}" placeholder="ID do canal ➕ Criar Sala" />
+            <small style="color:var(--text-muted)">Quando alguém entrar neste canal, o bot cria uma sala temporária.</small>
+          </div>
+
+          <div class="form-group">
+            <label>Categoria para as salas (ID, opcional)</label>
+            <input class="form-control" id="jtcCategory" value="${j.category_id ?? ''}" placeholder="ID da categoria (opcional)" />
+          </div>
+
+          <div class="form-group">
+            <label>Modelo de nome das salas</label>
+            <input class="form-control" id="jtcName" value="${j.name_template ?? '🎮 {username}'}" placeholder="🎮 {username}" />
+            <small style="color:var(--text-muted)">Use <code>{username}</code> para o nome do membro.</small>
+          </div>
+
+          <button class="btn btn-primary" id="saveBtn">Salvar alterações</button>
+          <span id="saveMsg" style="font-size:13px;color:var(--green);margin-left:10px;display:none">✅ Salvo!</span>
+        </div>`;
+
+      document.getElementById("jtcEnabled").addEventListener("change", (e) => {
+        document.getElementById("statusLabel").textContent = e.target.checked ? "✅ Ativo" : "⏸ Inativo";
+      });
+
+      document.getElementById("saveBtn").addEventListener("click", async () => {
+        const btn = document.getElementById("saveBtn");
+        btn.disabled = true; btn.textContent = "Salvando…";
+        try {
+          const enabled = document.getElementById("jtcEnabled").checked;
+          if (!enabled) {
+            await patchModule(guildId, "jtc", { enabled: false });
+          } else {
+            await patchModule(guildId, "jtc", {
+              triggerChannelId: document.getElementById("jtcTrigger").value,
+              categoryId: document.getElementById("jtcCategory").value || null,
+              nameTemplate: document.getElementById("jtcName").value || "🎮 {username}",
+            });
+          }
+          const msg = document.getElementById("saveMsg");
+          msg.style.display = "inline"; setTimeout(() => msg.style.display = "none", 3000);
+        } catch (err) { alert("Erro: " + err.message); }
+        finally { btn.disabled = false; btn.textContent = "Salvar alterações"; }
+      });
+    } catch (err) {
+      document.getElementById("content").innerHTML = `<div class="alert alert-danger">Erro: ${err.message}</div>`;
+    }
+  }
+  load();
+</script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cargos — Bot Admin</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="content">
+    <div class="topbar">
+      <h2>🏷️ Cargos e Reaction Roles</h2>
+      <div class="user-info"><img class="avatar" id="userAvatar" src="" alt="" /><span id="username"></span></div>
+    </div>
+    <div id="content"><div class="spinner"></div></div>
+  </main>
+</div>
+<script type="module">
+  import { isLoggedIn, getStoredGuild, logout, getRoles, createRoleMenu, deleteRoleMenu, addRoleMenuOption, removeRoleMenuOption, addReactionRole, deleteReactionRole } from "./js/api.js";
+  import { sidebarHTML } from "./js/sidebar.js";
+
+  if (!isLoggedIn()) { window.location.href = "/index.html"; }
+  const guildId = getStoredGuild();
+  if (!guildId) { window.location.href = "/guilds.html"; }
+  document.getElementById("sidebar").innerHTML = sidebarHTML();
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  document.getElementById("changeGuildBtn")?.addEventListener("click", () => window.location.href = "/guilds.html");
+  document.querySelectorAll("nav.sidebar a[data-page]").forEach((a) => { if (a.dataset.page === "roles") a.classList.add("active"); });
+
+  async function load() {
+    try {
+      const data = await getRoles(guildId);
+      const { menus = [], reactionRoles = [] } = data;
+
+      document.getElementById("content").innerHTML = `
+        <div style="display:grid;gap:24px">
+
+          <!-- MENUS DE CARGO -->
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+              <h3 style="margin:0">📋 Menus de Cargo (Dropdown)</h3>
+            </div>
+            <div class="alert alert-info" style="margin-bottom:16px">
+              Crie painéis com dropdown onde membros escolhem seus próprios cargos. Use o comando <code>/cargo-menu criar</code> no Discord para enviar o painel no canal.
+            </div>
+            <div id="menusList">${renderMenus(menus)}</div>
+            <hr style="border-color:var(--border);margin:20px 0" />
+            <h4 style="margin:0 0 12px">➕ Novo menu de cargo</h4>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <div class="form-group">
+                <label>Canal (ID)</label>
+                <input class="form-control" id="menuChannel" placeholder="ID do canal" />
+              </div>
+              <div class="form-group">
+                <label>Título</label>
+                <input class="form-control" id="menuTitle" placeholder="Escolha seus cargos" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Descrição (opcional)</label>
+              <input class="form-control" id="menuDesc" placeholder="Selecione as opções abaixo" />
+            </div>
+            <button class="btn btn-primary" id="addMenuBtn">Criar menu</button>
+            <span id="addMenuMsg" style="font-size:13px;color:var(--green);margin-left:10px;display:none">✅ Criado!</span>
+          </div>
+
+          <!-- REACTION ROLES -->
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+              <h3 style="margin:0">😄 Reaction Roles</h3>
+            </div>
+            <div class="alert alert-info" style="margin-bottom:16px">
+              Associa um emoji a um cargo em uma mensagem específica. Reagir = ganhar cargo. Remover reação = perder cargo.
+            </div>
+            <div id="rrList">${renderReactionRoles(reactionRoles)}</div>
+            <hr style="border-color:var(--border);margin:20px 0" />
+            <h4 style="margin:0 0 12px">➕ Nova reaction role</h4>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <div class="form-group">
+                <label>Canal (ID)</label>
+                <input class="form-control" id="rrChannel" placeholder="ID do canal" />
+              </div>
+              <div class="form-group">
+                <label>ID da mensagem</label>
+                <input class="form-control" id="rrMessage" placeholder="ID da mensagem" />
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <div class="form-group">
+                <label>Emoji</label>
+                <input class="form-control" id="rrEmoji" placeholder="👍" style="font-size:20px" />
+              </div>
+              <div class="form-group">
+                <label>Cargo (ID)</label>
+                <input class="form-control" id="rrRole" placeholder="ID do cargo" />
+              </div>
+            </div>
+            <button class="btn btn-primary" id="addRrBtn">Adicionar reaction role</button>
+            <span id="addRrMsg" style="font-size:13px;color:var(--green);margin-left:10px;display:none">✅ Adicionado!</span>
+          </div>
+        </div>`;
+
+      document.getElementById("addMenuBtn").addEventListener("click", async () => {
+        const btn = document.getElementById("addMenuBtn");
+        btn.disabled = true; btn.textContent = "Criando…";
+        try {
+          await createRoleMenu(guildId, {
+            channelId: document.getElementById("menuChannel").value,
+            title: document.getElementById("menuTitle").value,
+            description: document.getElementById("menuDesc").value || null,
+          });
+          const msg = document.getElementById("addMenuMsg");
+          msg.style.display = "inline"; setTimeout(() => msg.style.display = "none", 3000);
+          setTimeout(() => window.location.reload(), 1000);
+        } catch (err) { alert("Erro: " + err.message); }
+        finally { btn.disabled = false; btn.textContent = "Criar menu"; }
+      });
+
+      document.getElementById("addRrBtn").addEventListener("click", async () => {
+        const btn = document.getElementById("addRrBtn");
+        btn.disabled = true; btn.textContent = "Adicionando…";
+        try {
+          await addReactionRole(guildId, {
+            channelId: document.getElementById("rrChannel").value,
+            messageId: document.getElementById("rrMessage").value,
+            emoji: document.getElementById("rrEmoji").value,
+            roleId: document.getElementById("rrRole").value,
+          });
+          const msg = document.getElementById("addRrMsg");
+          msg.style.display = "inline"; setTimeout(() => msg.style.display = "none", 3000);
+          setTimeout(() => window.location.reload(), 1000);
+        } catch (err) { alert("Erro: " + err.message); }
+        finally { btn.disabled = false; btn.textContent = "Adicionar reaction role"; }
+      });
+
+    } catch (err) {
+      document.getElementById("content").innerHTML = `<div class="alert alert-danger">Erro: ${err.message}</div>`;
+    }
+  }
+
+  function renderMenus(menus) {
+    if (!menus.length) return `<div style="color:var(--text-muted);font-size:14px">Nenhum menu criado ainda.</div>`;
+    return menus.map(m => `
+      <div style="border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-weight:600">${m.title}</div>
+            <div style="font-size:12px;color:var(--text-muted)">Canal: ${m.channel_id} • ID: ${m.id}</div>
+            ${m.options.length ? `
+            <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">
+              ${m.options.map(o => `
+                <span style="background:var(--bg-secondary);border:1px solid var(--border);padding:2px 10px;border-radius:20px;font-size:12px">
+                  ${o.emoji ? o.emoji + " " : ""}${o.label || o.role_id}
+                  <button onclick="removeOption(${m.id},'${o.role_id}')" style="background:none;border:none;color:var(--danger);cursor:pointer;margin-left:4px">×</button>
+                </span>`).join("")}
+            </div>` : `<div style="font-size:12px;color:var(--text-muted);margin-top:6px">Sem opções ainda</div>`}
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="removeMenu(${m.id})">Remover</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;margin-top:12px">
+          <input class="form-control" id="opt-role-${m.id}" placeholder="ID do cargo" style="font-size:13px" />
+          <input class="form-control" id="opt-label-${m.id}" placeholder="Label" style="font-size:13px" />
+          <input class="form-control" id="opt-emoji-${m.id}" placeholder="Emoji" style="font-size:13px" />
+          <button class="btn btn-primary btn-sm" onclick="addOption(${m.id})">+ Cargo</button>
+        </div>
+      </div>`).join("");
+  }
+
+  function renderReactionRoles(rrs) {
+    if (!rrs.length) return `<div style="color:var(--text-muted);font-size:14px">Nenhuma reaction role criada ainda.</div>`;
+    return `<table class="table"><thead><tr><th>Emoji</th><th>ID Mensagem</th><th>Canal</th><th>Cargo</th><th></th></tr></thead><tbody>
+      ${rrs.map(r => `
+        <tr>
+          <td style="font-size:20px">${r.emoji}</td>
+          <td><code>${r.message_id}</code></td>
+          <td><code>${r.channel_id}</code></td>
+          <td><code>${r.role_id}</code></td>
+          <td><button class="btn btn-danger btn-sm" onclick="removeRR(${r.id})">Remover</button></td>
+        </tr>`).join("")}
+    </tbody></table>`;
+  }
+
+  window.removeMenu = async (id) => {
+    if (!confirm("Remover este menu?")) return;
+    try { await deleteRoleMenu(guildId, id); window.location.reload(); }
+    catch (err) { alert("Erro: " + err.message); }
+  };
+
+  window.addOption = async (menuId) => {
+    const roleId = document.getElementById(`opt-role-${menuId}`).value;
+    const label = document.getElementById(`opt-label-${menuId}`).value;
+    const emoji = document.getElementById(`opt-emoji-${menuId}`).value;
+    if (!roleId) return alert("ID do cargo obrigatório.");
+    try { await addRoleMenuOption(guildId, menuId, { roleId, label: label || null, emoji: emoji || null }); window.location.reload(); }
+    catch (err) { alert("Erro: " + err.message); }
+  };
+
+  window.removeOption = async (menuId, roleId) => {
+    try { await removeRoleMenuOption(guildId, menuId, roleId); window.location.reload(); }
+    catch (err) { alert("Erro: " + err.message); }
+  };
+
+  window.removeRR = async (id) => {
+    if (!confirm("Remover esta reaction role?")) return;
+    try { await deleteReactionRole(guildId, id); window.location.reload(); }
+    catch (err) { alert("Erro: " + err.message); }
+  };
+
+  load();
+</script>
+</body>
+</html>

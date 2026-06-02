@@ -17,6 +17,11 @@ export function sidebarHTML(guildName = "") {
   <a href="/module-welcome.html" data-page="welcome"><span class="icon">👋</span> Boas-vindas</a>
   <a href="/module-automod.html" data-page="automod"><span class="icon">🛡️</span> Auto-moderação</a>
   <a href="/module-logs.html" data-page="logs"><span class="icon">📋</span> Logs</a>
+  <a href="/module-starboard.html" data-page="starboard"><span class="icon">⭐</span> Starboard</a>
+  <a href="/module-jtc.html" data-page="jtc"><span class="icon">🎮</span> Join-to-Create</a>
+  <a href="/module-counting.html" data-page="counting"><span class="icon">🔢</span> Counting Game</a>
+  <a href="/module-stats.html" data-page="stats"><span class="icon">📊</span> Canais de Stats</a>
+  <a href="/roles.html" data-page="roles"><span class="icon">🏷️</span> Cargos e Roles</a>
 
   <span class="nav-group">Conteúdo</span>
   <a href="/tags.html" data-page="tags"><span class="icon">💬</span> Tags</a>

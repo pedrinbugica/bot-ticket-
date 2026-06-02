@@ -223,3 +223,59 @@ export async function createScheduled(guildId, data) {
 export async function deleteScheduled(guildId, id) {
   return apiFetch(`/api/guilds/${guildId}/content/scheduled/${id}`, { method: "DELETE" });
 }
+
+// ── Stats Channels ─────────────────────────────────────────────────────────
+
+export async function getStats(guildId) {
+  return apiFetch(`/api/guilds/${guildId}/modules/stats`);
+}
+
+export async function createStat(guildId, data) {
+  return apiFetch(`/api/guilds/${guildId}/modules/stats`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteStat(guildId, statType) {
+  return apiFetch(`/api/guilds/${guildId}/modules/stats/${statType}`, { method: "DELETE" });
+}
+
+// ── Cargos e Reaction Roles ────────────────────────────────────────────────
+
+export async function getRoles(guildId) {
+  return apiFetch(`/api/guilds/${guildId}/modules/roles`);
+}
+
+export async function createRoleMenu(guildId, data) {
+  return apiFetch(`/api/guilds/${guildId}/modules/roles/menus`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteRoleMenu(guildId, menuId) {
+  return apiFetch(`/api/guilds/${guildId}/modules/roles/menus/${menuId}`, { method: "DELETE" });
+}
+
+export async function addRoleMenuOption(guildId, menuId, data) {
+  return apiFetch(`/api/guilds/${guildId}/modules/roles/menus/${menuId}/options`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function removeRoleMenuOption(guildId, menuId, roleId) {
+  return apiFetch(`/api/guilds/${guildId}/modules/roles/menus/${menuId}/options/${roleId}`, { method: "DELETE" });
+}
+
+export async function addReactionRole(guildId, data) {
+  return apiFetch(`/api/guilds/${guildId}/modules/roles/reaction-roles`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteReactionRole(guildId, id) {
+  return apiFetch(`/api/guilds/${guildId}/modules/roles/reaction-roles/${id}`, { method: "DELETE" });
+}

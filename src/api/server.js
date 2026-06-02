@@ -7,6 +7,7 @@ import moderationRouter from "./routes/moderation.js";
 import levelingRouter from "./routes/leveling.js";
 import modulesRouter from "./routes/modules.js";
 import contentRouter from "./routes/content.js";
+import rolesRouter from "./routes/roles.js";
 
 const PORT = Number(process.env.DASHBOARD_PORT ?? 3000);
 const ORIGIN = process.env.DASHBOARD_ORIGIN ?? "*";
@@ -68,6 +69,7 @@ export function startApiServer(client) {
   app.use("/api/guilds", levelingRouter);
   app.use("/api/guilds", modulesRouter);
   app.use("/api/guilds", contentRouter);
+  app.use("/api/guilds", rolesRouter);
 
   // 404
   app.use((_req, res) => res.status(404).json({ error: "Rota não encontrada." }));

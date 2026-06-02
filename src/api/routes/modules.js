@@ -8,7 +8,7 @@ import { getStarboardConfig, upsertStarboardConfig, disableStarboard } from "../
 import { getJtcConfig, upsertJtcConfig, removeJtcConfig } from "../../db/jtc.js";
 import { getBirthdaySettings, upsertBirthdaySettings } from "../../db/birthdays.js";
 import { getCountingChannel, setCountingChannel, removeCountingChannel } from "../../db/counting.js";
-import { listStatsChannels } from "../../db/stats.js";
+import { listStatsChannels, upsertStatsChannel, removeStatsChannel, STAT_TYPES } from "../../db/stats.js";
 
 const router = Router();
 
@@ -220,6 +220,43 @@ router.patch("/:guildId/modules/counting", requireAuth, (req, res) => {
   } catch (err) {
     console.error("[modules/counting PATCH] Erro:", err);
     res.status(500).json({ error: "Erro ao salvar config de counting." });
+  }
+});
+
+// ── STATS CHANNELS ────────────────────────────────────────────────────────
+
+// GET /api/guilds/:guildId/modules/stats
+router.get("/:guildId/modules/stats", requireAuth, (req, res) => {
+  const { guildId } = req.params;
+  try {
+    res.json({ channels: listStatsChannels(guildId), types: STAT_TYPES });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao buscar canais de stats." });
+  }
+});
+
+// POST /api/guilds/:guildId/modules/stats
+router.post("/:guildId/modules/stats", requireAuth, (req, res) => {
+  const { guildId } = req.params;
+  const { statType, channelId, format } = req.body;
+  if (!statType || !channelId) return res.status(400).json({ error: "statType e channelId obrigatórios." });
+  if (!STAT_TYPES.includes(statType)) return res.status(400).json({ error: "Tipo inválido." });
+  try {
+    upsertStatsChannel(guildId, statType, channelId, format ?? null);
+    res.json({ ok: true, channels: listStatsChannels(guildId) });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao salvar canal de stats." });
+  }
+});
+
+// DELETE /api/guilds/:guildId/modules/stats/:statType
+router.delete("/:guildId/modules/stats/:statType", requireAuth, (req, res) => {
+  const { guildId, statType } = req.params;
+  try {
+    removeStatsChannel(guildId, statType);
+    res.json({ ok: true, channels: listStatsChannels(guildId) });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao remover canal de stats." });
   }
 });
 
