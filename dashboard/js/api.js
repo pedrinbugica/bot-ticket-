@@ -1,5 +1,6 @@
-// URL base da API — em produção aponta para o Discloud
-const API_URL = window.API_URL ?? "http://localhost:3000";
+// URL base da API — aponta para o bot no Discloud
+// Para testar local: abra o console do navegador e escreva: window.API_URL = "http://localhost:3000"
+const API_URL = window.API_URL ?? "https://discord-admin-bot.discloud.app";
 
 // ── Token JWT ──────────────────────────────────────────────────────────────
 
