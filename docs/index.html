@@ -623,6 +623,7 @@ t<!DOCTYPE html>
         <tr><td><code>/mod casos</code></td><td>Lista os 10 casos mais recentes do servidor</td></tr>
         <tr><td><code>/mod remover caso:5</code></td><td>Inativa um caso pelo número</td></tr>
         <tr><td><code>/mod purge quantidade:50</code></td><td>Apaga as últimas 50 mensagens do canal (máx. 100, últimos 14 dias)</td></tr>
+        <tr><td><code>/mod unban usuario_id:123456789</code></td><td>Desbane um usuário pelo ID numérico. Para pegar o ID: ative o Modo Desenvolvedor no Discord, clique com botão direito no usuário banido → Copiar ID</td></tr>
       </tbody>
     </table>
   </section>
@@ -1070,6 +1071,17 @@ t<!DOCTYPE html>
     <div class="alert alert-info">
       <strong>ℹ️ Formatos aceitos</strong>
       <code>0</code> (off), <code>30s</code>, <code>1m</code>, <code>10m</code>, <code>1h</code> — máximo 6 horas.
+    </div>
+    <div class="alert alert-success">
+      <strong>✅ Também disponível pelo painel web</strong>
+      Na página <strong>Moderação</strong> do painel, a seção <em>Gerenciamento de canais</em> permite aplicar modo lento e travar/destravar canais sem precisar usar comandos. Basta selecionar o canal, escolher a duração ou clicar em "Travar canal".
+    </div>
+
+    <h3>Travar Canal</h3>
+    <p>Bloqueia o envio de mensagens de todos os membros comuns num canal — sem precisar excluir o canal ou silenciar cada pessoa individualmente. Útil para pausar um canal durante manutenção ou situações de emergência.</p>
+    <div class="alert alert-info">
+      <strong>ℹ️ Como usar</strong>
+      Acesse o painel web → <strong>Moderação</strong> → seção <em>Gerenciamento de canais</em> → selecione o canal → clique em <strong>🔒 Travar canal</strong>. Para reabrir, clique em <strong>🔓 Destravar canal</strong>.
     </div>
 
     <h3>Banimento Temporário (TempBan)</h3>

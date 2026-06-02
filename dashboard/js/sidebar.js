@@ -31,9 +31,6 @@ export function sidebarHTML(guildName = "") {
   <a href="/birthdays.html" data-page="birthdays"><span class="icon">🎂</span> Aniversários</a>
   <a href="/scheduled.html" data-page="scheduled"><span class="icon">📅</span> Agendados</a>
 
-  <span class="nav-group">Ajuda</span>
-  <a href="/docs.html" data-page="docs"><span class="icon">📚</span> Documentação</a>
-
   <div class="sidebar-footer">
     <button class="btn btn-ghost btn-sm" id="changeGuildBtn" style="width:100%;margin-bottom:8px">↩ Trocar servidor</button>
     <button class="btn btn-ghost btn-sm" id="logoutBtn" style="width:100%">Sair</button>
