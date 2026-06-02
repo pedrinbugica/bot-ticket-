@@ -170,6 +170,24 @@ export async function getUserInfractionsApi(guildId, userId) {
   return apiFetch(`/api/guilds/${guildId}/moderation/user/${userId}`);
 }
 
+export async function getChannels(guildId) {
+  return apiFetch(`/api/guilds/${guildId}/moderation/channels`);
+}
+
+export async function setSlowmode(guildId, channelId, seconds) {
+  return apiFetch(`/api/guilds/${guildId}/moderation/channels/${channelId}/slowmode`, {
+    method: "POST",
+    body: JSON.stringify({ seconds }),
+  });
+}
+
+export async function lockChannel(guildId, channelId, locked) {
+  return apiFetch(`/api/guilds/${guildId}/moderation/channels/${channelId}/lock`, {
+    method: "POST",
+    body: JSON.stringify({ locked }),
+  });
+}
+
 // ── Módulos ────────────────────────────────────────────────────────────────
 
 export async function getModules(guildId) {

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { PermissionFlagsBits } from "discord.js";
 import { requireAuth } from "../middleware/auth.js";
 import {
   getRecentCases,
@@ -64,6 +65,76 @@ router.delete("/:guildId/moderation/:caseNumber", requireAuth, (req, res) => {
   } catch (err) {
     console.error("[moderation/delete] Erro:", err);
     res.status(500).json({ error: "Erro ao inativar caso." });
+  }
+});
+
+// GET /api/guilds/:guildId/moderation/channels — lista canais de texto com slowmode e lock
+router.get("/:guildId/moderation/channels", requireAuth, (req, res) => {
+  const { guildId } = req.params;
+  const guild = req.discordClient?.guilds?.cache?.get(guildId);
+  if (!guild) return res.status(404).json({ error: "Servidor não encontrado." });
+
+  try {
+    const channels = guild.channels.cache
+      .filter(c => c.type === 0) // GuildText
+      .map(c => {
+        const overwrite = c.permissionOverwrites?.cache?.get(guildId);
+        return {
+          id: c.id,
+          name: c.name,
+          slowmode: c.rateLimitPerUser ?? 0,
+          locked: overwrite?.deny?.has(PermissionFlagsBits.SendMessages) ?? false,
+        };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    res.json({ channels });
+  } catch (err) {
+    console.error("[moderation/channels] Erro:", err);
+    res.status(500).json({ error: "Erro ao buscar canais." });
+  }
+});
+
+// POST /api/guilds/:guildId/moderation/channels/:channelId/slowmode
+router.post("/:guildId/moderation/channels/:channelId/slowmode", requireAuth, async (req, res) => {
+  const { guildId, channelId } = req.params;
+  const { seconds } = req.body;
+
+  const guild = req.discordClient?.guilds?.cache?.get(guildId);
+  if (!guild) return res.status(404).json({ error: "Servidor não encontrado." });
+
+  const channel = guild.channels.cache.get(channelId);
+  if (!channel) return res.status(404).json({ error: "Canal não encontrado." });
+
+  try {
+    const s = Math.max(0, Math.min(21600, Number(seconds) || 0));
+    await channel.setRateLimitPerUser(s);
+    res.json({ ok: true, slowmode: s });
+  } catch (err) {
+    console.error("[moderation/slowmode] Erro:", err);
+    res.status(500).json({ error: "Erro ao aplicar modo lento." });
+  }
+});
+
+// POST /api/guilds/:guildId/moderation/channels/:channelId/lock
+router.post("/:guildId/moderation/channels/:channelId/lock", requireAuth, async (req, res) => {
+  const { guildId, channelId } = req.params;
+  const { locked } = req.body;
+
+  const guild = req.discordClient?.guilds?.cache?.get(guildId);
+  if (!guild) return res.status(404).json({ error: "Servidor não encontrado." });
+
+  const channel = guild.channels.cache.get(channelId);
+  if (!channel) return res.status(404).json({ error: "Canal não encontrado." });
+
+  try {
+    await channel.permissionOverwrites.edit(guild.roles.everyone, {
+      SendMessages: locked ? false : null,
+    });
+    res.json({ ok: true, locked: !!locked });
+  } catch (err) {
+    console.error("[moderation/lock] Erro:", err);
+    res.status(500).json({ error: "Erro ao alterar permissões do canal." });
   }
 });
 

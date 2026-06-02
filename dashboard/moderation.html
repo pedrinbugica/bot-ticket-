@@ -18,7 +18,7 @@
   </main>
 </div>
 <script type="module">
-  import { isLoggedIn, getModeration, deleteCase, getUserInfractionsApi, getStoredGuild, logout } from "./js/api.js";
+  import { isLoggedIn, getModeration, deleteCase, getUserInfractionsApi, getStoredGuild, logout, getChannels, setSlowmode, lockChannel } from "./js/api.js";
   import { sidebarHTML } from "./js/sidebar.js";
   import { formatDate, actionBadge } from "./js/layout.js";
 
@@ -30,9 +30,19 @@
   document.getElementById("changeGuildBtn")?.addEventListener("click", () => window.location.href = "/guilds.html");
   document.querySelectorAll("nav.sidebar a[data-page]").forEach((a) => { if (a.dataset.page === "moderation") a.classList.add("active"); });
 
+  let channelData = [];
+
   async function load() {
     try {
-      const { cases, activeMutes, activeBans, totalByAction } = await getModeration(guildId, 50);
+      const [
+        { cases, activeMutes, activeBans, totalByAction },
+        { channels: channelList },
+      ] = await Promise.all([
+        getModeration(guildId, 50),
+        getChannels(guildId),
+      ]);
+      channelData = channelList;
+
       const byAction = {};
       totalByAction.forEach((r) => byAction[r.action] = r.cnt);
 
@@ -57,6 +67,39 @@
             <div class="stat-icon">📋</div>
             <div class="stat-value">${(byAction.warn ?? 0) + (byAction.mute ?? 0) + (byAction.kick ?? 0) + (byAction.ban ?? 0) + (byAction.tempban ?? 0)}</div>
             <div class="stat-label">Total de casos</div>
+          </div>
+        </div>
+
+        <!-- Gerenciamento de canais -->
+        <div class="card" style="margin-bottom:20px">
+          <h3 style="margin:0 0 16px;font-size:15px">🔧 Gerenciamento de canais</h3>
+          <div style="margin-bottom:14px">
+            <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:6px">Selecione um canal de texto</label>
+            <select class="form-control" id="channelSelect" style="max-width:280px">
+              <option value="">Escolha um canal...</option>
+              ${channelList.map(c => `<option value="${c.id}" data-slowmode="${c.slowmode}" data-locked="${c.locked ? '1' : '0'}">#${c.name}</option>`).join("")}
+            </select>
+          </div>
+          <div id="channelControls" style="display:none">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <div style="background:var(--bg-secondary);padding:14px;border-radius:8px">
+                <div style="font-size:13px;font-weight:600;margin-bottom:12px">⏱️ Modo lento</div>
+                <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">
+                  ${[["Off","0"],["5s","5"],["10s","10"],["30s","30"],["1min","60"],["5min","300"],["1h","3600"]].map(([l,v]) => `<button class="btn btn-ghost btn-sm slowmode-preset" data-sec="${v}">${l}</button>`).join("")}
+                </div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <input type="number" class="form-control" id="slowmodeInput" placeholder="0–21600 seg" min="0" max="21600" style="max-width:140px" />
+                  <button class="btn btn-primary btn-sm" id="applySlowmode">Aplicar</button>
+                </div>
+                <p id="slowmodeStatus" style="font-size:12px;margin-top:8px;color:var(--text-muted)"></p>
+              </div>
+              <div style="background:var(--bg-secondary);padding:14px;border-radius:8px">
+                <div style="font-size:13px;font-weight:600;margin-bottom:10px">🔒 Travar canal</div>
+                <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">Impede que membros comuns enviem mensagens neste canal.</p>
+                <p id="lockStatus" style="font-size:13px;font-weight:500;margin-bottom:12px"></p>
+                <button class="btn btn-sm" id="lockBtn"></button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -123,7 +166,7 @@
           </table></div>
         </div>` : ""}`;
 
-      // Filtros
+      // Filtros de casos
       document.querySelectorAll(".filter-btn").forEach(btn => {
         btn.addEventListener("click", () => {
           document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
@@ -157,9 +200,100 @@
         } catch (err) { result.innerHTML = `<p style="color:var(--danger);font-size:13px">Erro: ${err.message}</p>`; }
       });
 
+      // Gerenciamento de canais
+      const channelSelect = document.getElementById("channelSelect");
+      const channelControls = document.getElementById("channelControls");
+
+      channelSelect.addEventListener("change", () => {
+        const ch = channelData.find(c => c.id === channelSelect.value);
+        if (!ch) { channelControls.style.display = "none"; return; }
+        channelControls.style.display = "block";
+        document.getElementById("slowmodeInput").value = ch.slowmode;
+        updateSlowmodeStatus(ch.slowmode);
+        updateLockBtn(ch.locked);
+      });
+
+      document.querySelectorAll(".slowmode-preset").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.getElementById("slowmodeInput").value = btn.dataset.sec;
+        });
+      });
+
+      document.getElementById("applySlowmode").addEventListener("click", async () => {
+        const channelId = channelSelect.value;
+        if (!channelId) return;
+        const seconds = Number(document.getElementById("slowmodeInput").value) || 0;
+        const applyBtn = document.getElementById("applySlowmode");
+        applyBtn.disabled = true;
+        applyBtn.textContent = "...";
+        try {
+          await setSlowmode(guildId, channelId, seconds);
+          const ch = channelData.find(c => c.id === channelId);
+          if (ch) ch.slowmode = seconds;
+          updateSlowmodeStatus(seconds);
+          applyBtn.textContent = "✓ Salvo";
+          setTimeout(() => { applyBtn.textContent = "Aplicar"; applyBtn.disabled = false; }, 1500);
+        } catch (err) {
+          alert("Erro: " + err.message);
+          applyBtn.textContent = "Aplicar";
+          applyBtn.disabled = false;
+        }
+      });
+
+      document.getElementById("lockBtn").addEventListener("click", async () => {
+        const channelId = channelSelect.value;
+        if (!channelId) return;
+        const ch = channelData.find(c => c.id === channelId);
+        const newLocked = !ch.locked;
+        const btn = document.getElementById("lockBtn");
+        btn.disabled = true;
+        try {
+          await lockChannel(guildId, channelId, newLocked);
+          ch.locked = newLocked;
+          updateLockBtn(newLocked);
+        } catch (err) {
+          alert("Erro: " + err.message);
+        } finally {
+          btn.disabled = false;
+        }
+      });
+
     } catch (err) {
       document.getElementById("content").innerHTML = `<div class="alert alert-danger">Erro: ${err.message}</div>`;
     }
+  }
+
+  function updateSlowmodeStatus(seconds) {
+    const el = document.getElementById("slowmodeStatus");
+    if (!el) return;
+    if (seconds === 0) {
+      el.textContent = "Desativado";
+      el.style.color = "var(--text-muted)";
+    } else {
+      el.textContent = `Ativo: ${formatSeconds(seconds)}`;
+      el.style.color = "var(--yellow)";
+    }
+  }
+
+  function updateLockBtn(locked) {
+    const btn = document.getElementById("lockBtn");
+    const status = document.getElementById("lockStatus");
+    if (!btn || !status) return;
+    if (locked) {
+      btn.className = "btn btn-sm btn-primary";
+      btn.textContent = "🔓 Destravar canal";
+      status.innerHTML = '<span style="color:var(--danger)">🔒 Canal travado — membros não podem enviar mensagens</span>';
+    } else {
+      btn.className = "btn btn-sm btn-danger";
+      btn.textContent = "🔒 Travar canal";
+      status.innerHTML = '<span style="color:var(--green,#57f287)">🔓 Canal aberto</span>';
+    }
+  }
+
+  function formatSeconds(s) {
+    if (s < 60) return `${s}s`;
+    if (s < 3600) return `${Math.floor(s / 60)}min`;
+    return `${Math.floor(s / 3600)}h`;
   }
 
   function renderCases(cases) {
