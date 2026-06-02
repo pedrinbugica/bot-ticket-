@@ -152,6 +152,24 @@ export async function resetUserXp(guildId, userId) {
   return apiFetch(`/api/guilds/${guildId}/leveling/user/${userId}/xp`, { method: "DELETE" });
 }
 
+export async function addLevelRoleApi(guildId, level, roleId) {
+  return apiFetch(`/api/guilds/${guildId}/leveling/roles`, {
+    method: "POST",
+    body: JSON.stringify({ level, roleId }),
+  });
+}
+
+export async function upsertMultiplier(guildId, targetType, targetId, multiplier) {
+  return apiFetch(`/api/guilds/${guildId}/leveling/multipliers`, {
+    method: "POST",
+    body: JSON.stringify({ targetType, targetId, multiplier }),
+  });
+}
+
+export async function getUserInfractionsApi(guildId, userId) {
+  return apiFetch(`/api/guilds/${guildId}/moderation/user/${userId}`);
+}
+
 // ── Módulos ────────────────────────────────────────────────────────────────
 
 export async function getModules(guildId) {

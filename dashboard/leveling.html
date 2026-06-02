@@ -9,119 +9,167 @@
 <body>
 <div class="layout">
   <nav class="sidebar" id="sidebar"></nav>
-
   <main class="content">
     <div class="topbar">
       <h2>⭐ XP e Níveis</h2>
-      <div class="user-info">
-        <img class="avatar" id="userAvatar" src="" alt="" />
-        <span id="username"></span>
-      </div>
+      <div class="user-info"><img class="avatar" id="userAvatar" src="" alt="" /><span id="username"></span></div>
     </div>
-
     <div id="content"><div class="spinner"></div></div>
   </main>
 </div>
-
 <script type="module">
-  import { isLoggedIn, getLeaderboard, getLevelingSettings, patchLevelingSettings, deleteLevelRole, getStoredGuild, logout } from "./js/api.js";
+  import { isLoggedIn, getLeaderboard, getLevelingSettings, patchLevelingSettings, deleteLevelRole, addLevelRoleApi, upsertMultiplier, resetUserXp, getStoredGuild, logout } from "./js/api.js";
   import { sidebarHTML } from "./js/sidebar.js";
 
   if (!isLoggedIn()) { window.location.href = "/index.html"; }
   const guildId = getStoredGuild();
   if (!guildId) { window.location.href = "/guilds.html"; }
-
   document.getElementById("sidebar").innerHTML = sidebarHTML();
   document.getElementById("logoutBtn")?.addEventListener("click", logout);
   document.getElementById("changeGuildBtn")?.addEventListener("click", () => window.location.href = "/guilds.html");
-  document.querySelectorAll("nav.sidebar a[data-page]").forEach((a) => {
-    if (a.dataset.page === "leveling") a.classList.add("active");
-  });
+  document.querySelectorAll("nav.sidebar a[data-page]").forEach((a) => { if (a.dataset.page === "leveling") a.classList.add("active"); });
 
   async function load() {
     try {
-      const [lbData, settData] = await Promise.all([
-        getLeaderboard(guildId, 20),
-        getLevelingSettings(guildId),
-      ]);
+      const [lbData, settData] = await Promise.all([getLeaderboard(guildId, 20), getLevelingSettings(guildId)]);
       const { entries, total } = lbData;
-      const { settings, roles } = settData;
+      const { settings, roles, multipliers } = settData;
       const maxXp = entries[0]?.xp ?? 1;
 
+      const channelMults = multipliers.filter(m => m.target_type === "channel");
+      const roleMults = multipliers.filter(m => m.target_type === "role");
+
       document.getElementById("content").innerHTML = `
-        <div class="grid grid-2" style="gap:20px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
 
           <!-- Leaderboard -->
-          <div class="card">
+          <div class="card" style="grid-row:span 3">
             <div class="section-header">
               <h3>🏆 Ranking (${total} membros)</h3>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input class="form-control" id="resetUserId" placeholder="ID do usuário" style="width:150px;font-size:13px" />
+                <button class="btn btn-danger btn-sm" id="resetBtn">Zerar XP</button>
+              </div>
             </div>
             ${entries.length === 0
-              ? '<p style="color:var(--muted);font-size:14px">Nenhum usuário com XP ainda.</p>'
+              ? '<p style="color:var(--text-muted);font-size:14px">Nenhum usuário com XP ainda.</p>'
               : entries.map((u, i) => `
-                  <div class="rank-row">
-                    <div class="rank-num ${i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : ''}">${i + 1}</div>
-                    <div style="flex:1">
-                      <div style="font-size:13px;color:var(--text)">Nível ${u.level}</div>
-                      <div style="font-size:11px;color:var(--muted)">${u.user_id}</div>
-                    </div>
-                    <div class="xp-bar-wrap" style="max-width:80px"><div class="xp-bar" style="width:${Math.round((u.xp / maxXp) * 100)}%"></div></div>
-                    <div class="rank-xp" style="min-width:70px;text-align:right">${u.xp.toLocaleString("pt-BR")} XP</div>
-                  </div>`).join("")}
+                <div class="rank-row">
+                  <div class="rank-num ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${i+1}</div>
+                  <div style="flex:1">
+                    <div style="font-size:13px;font-weight:600">Nível ${u.level}</div>
+                    <div style="font-size:11px;color:var(--text-muted)">${u.user_id}</div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div class="xp-bar-wrap" style="width:60px"><div class="xp-bar" style="width:${Math.round((u.xp/maxXp)*100)}%"></div></div>
+                    <div style="font-size:12px;color:var(--text-muted);min-width:80px;text-align:right">${u.xp.toLocaleString("pt-BR")} XP</div>
+                  </div>
+                </div>`).join("")}
           </div>
 
-          <!-- Configurações -->
-          <div>
-            <div class="card" style="margin-bottom:16px">
-              <div class="section-header"><h3>⚙️ Configurações de XP</h3></div>
-              <div class="form-group">
-                <label>Sistema ativo</label>
-                <label class="toggle">
-                  <input type="checkbox" id="xpEnabled" ${settings.enabled ? "checked" : ""} />
-                  <span class="slider"></span>
-                </label>
-              </div>
+          <!-- Config XP Mensagem -->
+          <div class="card">
+            <div class="section-header"><h3>💬 XP por Mensagem</h3></div>
+            <div class="form-group">
+              <label>Sistema ativo</label>
+              <label class="toggle"><input type="checkbox" id="xpEnabled" ${settings.enabled ? "checked" : ""} /><span class="slider"></span></label>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
               <div class="form-group">
                 <label>XP por mensagem</label>
-                <input class="form-control" type="number" id="xpPerMsg" value="${settings.xp_per_message ?? 15}" min="1" max="100" />
+                <input class="form-control" type="number" id="xpPerMsg" value="${settings.xp_per_message ?? 15}" min="1" max="500" />
               </div>
               <div class="form-group">
                 <label>Cooldown (segundos)</label>
                 <input class="form-control" type="number" id="xpCooldown" value="${settings.xp_cooldown_secs ?? 60}" min="0" max="3600" />
               </div>
-              <div class="form-group">
-                <label>Canal de level-up (ID)</label>
-                <input class="form-control" type="text" id="levelupChannel" value="${settings.levelup_channel_id ?? ''}" placeholder="ID do canal ou vazio" />
-              </div>
-              <button class="btn btn-primary" id="saveXp">Salvar</button>
-              <span id="saveMsg" style="font-size:13px;color:var(--green);margin-left:10px;display:none">✅ Salvo!</span>
             </div>
-
-            <!-- Recompensas -->
-            <div class="card">
-              <div class="section-header"><h3>🎁 Recompensas por nível</h3></div>
-              ${roles.length === 0
-                ? '<p style="color:var(--muted);font-size:14px">Nenhuma recompensa configurada.<br>Use <code>/xp recompensa-adicionar</code> no Discord.</p>'
-                : `<table>
-                    <thead><tr><th>Nível</th><th>Cargo ID</th><th></th></tr></thead>
-                    <tbody>
-                      ${roles.map((r) => `
-                        <tr>
-                          <td><strong>Nível ${r.level_required}</strong></td>
-                          <td style="font-size:12px;color:var(--muted)">${r.role_id}</td>
-                          <td><button class="btn btn-danger btn-sm" onclick="removeRole(${r.level_required})">Remover</button></td>
-                        </tr>`).join("")}
-                    </tbody>
-                  </table>`}
+            <div class="form-group">
+              <label>Canal de level-up (ID)</label>
+              <input class="form-control" id="levelupChannel" value="${settings.levelup_channel_id ?? ''}" placeholder="ID do canal ou vazio para DM" />
             </div>
+            <button class="btn btn-primary btn-sm" id="saveMsgXp">Salvar</button>
+            <span id="saveMsgMsg" style="font-size:13px;color:var(--green);margin-left:8px;display:none">✅ Salvo!</span>
           </div>
-        </div>
-      `;
 
-      document.getElementById("saveXp").addEventListener("click", async () => {
-        const btn = document.getElementById("saveXp");
-        btn.disabled = true;
-        btn.textContent = "Salvando…";
+          <!-- Config XP em Voz -->
+          <div class="card">
+            <div class="section-header"><h3>🎤 XP em Voz</h3></div>
+            <div class="form-group">
+              <label>XP em voz ativo</label>
+              <label class="toggle"><input type="checkbox" id="voiceEnabled" ${settings.voice_xp_enabled ? "checked" : ""} /><span class="slider"></span></label>
+            </div>
+            <div class="form-group">
+              <label>XP por minuto em voz</label>
+              <input class="form-control" type="number" id="voiceXpMin" value="${settings.voice_xp_per_minute ?? 5}" min="1" max="100" />
+            </div>
+            <button class="btn btn-primary btn-sm" id="saveVoiceXp">Salvar</button>
+            <span id="saveVoiceMsg" style="font-size:13px;color:var(--green);margin-left:8px;display:none">✅ Salvo!</span>
+          </div>
+
+          <!-- Recompensas por nível -->
+          <div class="card">
+            <div class="section-header"><h3>🎁 Recompensas por Nível</h3></div>
+            ${roles.length === 0
+              ? '<p style="color:var(--text-muted);font-size:13px;margin-bottom:12px">Nenhuma recompensa configurada.</p>'
+              : `<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
+                  ${roles.map(r => `
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg-secondary);border-radius:6px">
+                      <span style="font-size:13px"><strong>Nível ${r.level_required}</strong> → <code>${r.role_id}</code></span>
+                      <button class="btn btn-danger btn-sm" onclick="removeRole(${r.level_required})">×</button>
+                    </div>`).join("")}
+                </div>`}
+            <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px">
+              <input class="form-control" id="newRoleLevel" type="number" placeholder="Nível" min="1" style="font-size:13px" />
+              <input class="form-control" id="newRoleId" placeholder="ID do cargo" style="font-size:13px" />
+              <button class="btn btn-primary btn-sm" id="addRoleBtn">+ Cargo</button>
+            </div>
+            <span id="addRoleMsg" style="font-size:13px;color:var(--green);display:none">✅ Adicionado!</span>
+          </div>
+
+          <!-- Multiplicadores -->
+          <div class="card" style="grid-column:1/-1">
+            <div class="section-header"><h3>✖️ Multiplicadores de XP</h3></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+              <div>
+                <h4 style="margin:0 0 10px;font-size:14px">Por Canal</h4>
+                ${channelMults.length === 0
+                  ? '<p style="color:var(--text-muted);font-size:13px">Nenhum multiplicador de canal.</p>'
+                  : channelMults.map(m => `
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 12px;background:var(--bg-secondary);border-radius:6px;margin-bottom:6px">
+                      <span style="font-size:13px"><code>${m.target_id}</code> → <strong>${m.multiplier}x</strong></span>
+                      <button class="btn btn-danger btn-sm" onclick="removeMultiplier('channel','${m.target_id}')">×</button>
+                    </div>`).join("")}
+                <div style="display:grid;grid-template-columns:1fr 80px auto;gap:8px;margin-top:8px">
+                  <input class="form-control" id="multChannelId" placeholder="ID do canal" style="font-size:13px" />
+                  <input class="form-control" id="multChannelVal" type="number" placeholder="2" step="0.1" min="0.1" style="font-size:13px" />
+                  <button class="btn btn-primary btn-sm" onclick="addMultiplier('channel')">+</button>
+                </div>
+              </div>
+              <div>
+                <h4 style="margin:0 0 10px;font-size:14px">Por Cargo</h4>
+                ${roleMults.length === 0
+                  ? '<p style="color:var(--text-muted);font-size:13px">Nenhum multiplicador de cargo.</p>'
+                  : roleMults.map(m => `
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 12px;background:var(--bg-secondary);border-radius:6px;margin-bottom:6px">
+                      <span style="font-size:13px"><code>${m.target_id}</code> → <strong>${m.multiplier}x</strong></span>
+                      <button class="btn btn-danger btn-sm" onclick="removeMultiplier('role','${m.target_id}')">×</button>
+                    </div>`).join("")}
+                <div style="display:grid;grid-template-columns:1fr 80px auto;gap:8px;margin-top:8px">
+                  <input class="form-control" id="multRoleId" placeholder="ID do cargo" style="font-size:13px" />
+                  <input class="form-control" id="multRoleVal" type="number" placeholder="1.5" step="0.1" min="0.1" style="font-size:13px" />
+                  <button class="btn btn-primary btn-sm" onclick="addMultiplier('role')">+</button>
+                </div>
+              </div>
+            </div>
+            <p style="font-size:12px;color:var(--text-muted);margin-top:12px">ℹ️ O bot aplica o maior multiplicador entre canal e cargo — eles não se somam.</p>
+          </div>
+        </div>`;
+
+      // Salvar XP mensagem
+      document.getElementById("saveMsgXp").addEventListener("click", async () => {
+        const btn = document.getElementById("saveMsgXp");
+        btn.disabled = true; btn.textContent = "Salvando…";
         try {
           await patchLevelingSettings(guildId, {
             enabled: document.getElementById("xpEnabled").checked ? 1 : 0,
@@ -129,31 +177,75 @@
             xp_cooldown_secs: Number(document.getElementById("xpCooldown").value),
             levelup_channel_id: document.getElementById("levelupChannel").value || null,
           });
-          const msg = document.getElementById("saveMsg");
-          msg.style.display = "inline";
-          setTimeout(() => msg.style.display = "none", 3000);
-        } catch (err) {
-          alert("Erro: " + err.message);
-        } finally {
-          btn.disabled = false;
-          btn.textContent = "Salvar";
-        }
+          const msg = document.getElementById("saveMsgMsg");
+          msg.style.display = "inline"; setTimeout(() => msg.style.display = "none", 3000);
+        } catch (err) { alert("Erro: " + err.message); }
+        finally { btn.disabled = false; btn.textContent = "Salvar"; }
       });
 
-      window.removeRole = async function(level) {
-        if (!confirm(`Remover recompensa do nível ${level}?`)) return;
+      // Salvar XP voz
+      document.getElementById("saveVoiceXp").addEventListener("click", async () => {
+        const btn = document.getElementById("saveVoiceXp");
+        btn.disabled = true; btn.textContent = "Salvando…";
         try {
-          await deleteLevelRole(guildId, level);
+          await patchLevelingSettings(guildId, {
+            voice_xp_enabled: document.getElementById("voiceEnabled").checked ? 1 : 0,
+            voice_xp_per_minute: Number(document.getElementById("voiceXpMin").value),
+          });
+          const msg = document.getElementById("saveVoiceMsg");
+          msg.style.display = "inline"; setTimeout(() => msg.style.display = "none", 3000);
+        } catch (err) { alert("Erro: " + err.message); }
+        finally { btn.disabled = false; btn.textContent = "Salvar"; }
+      });
+
+      // Adicionar recompensa
+      document.getElementById("addRoleBtn").addEventListener("click", async () => {
+        const level = document.getElementById("newRoleLevel").value;
+        const roleId = document.getElementById("newRoleId").value;
+        if (!level || !roleId) return alert("Preencha nível e ID do cargo.");
+        try {
+          await addLevelRoleApi(guildId, Number(level), roleId);
+          const msg = document.getElementById("addRoleMsg");
+          msg.style.display = "inline"; setTimeout(() => { msg.style.display = "none"; load(); }, 1000);
+        } catch (err) { alert("Erro: " + err.message); }
+      });
+
+      // Zerar XP
+      document.getElementById("resetBtn").addEventListener("click", async () => {
+        const userId = document.getElementById("resetUserId").value.trim();
+        if (!userId) return alert("Digite o ID do usuário.");
+        if (!confirm(`Zerar XP de ${userId}?`)) return;
+        try {
+          await resetUserXp(guildId, userId);
+          alert("XP zerado!");
+          document.getElementById("resetUserId").value = "";
           load();
-        } catch (err) {
-          alert("Erro: " + err.message);
-        }
-      };
+        } catch (err) { alert("Erro: " + err.message); }
+      });
+
     } catch (err) {
-      document.getElementById("content").innerHTML =
-        `<div class="alert alert-danger">Erro ao carregar: ${err.message}</div>`;
+      document.getElementById("content").innerHTML = `<div class="alert alert-danger">Erro: ${err.message}</div>`;
     }
   }
+
+  window.removeRole = async (level) => {
+    if (!confirm(`Remover recompensa do nível ${level}?`)) return;
+    try { await deleteLevelRole(guildId, level); load(); }
+    catch (err) { alert("Erro: " + err.message); }
+  };
+
+  window.addMultiplier = async (type) => {
+    const id = document.getElementById(`mult${type==="channel"?"Channel":"Role"}Id`).value;
+    const val = document.getElementById(`mult${type==="channel"?"Channel":"Role"}Val`).value;
+    if (!id || !val) return alert("Preencha ID e multiplicador.");
+    try { await upsertMultiplier(guildId, type, id, Number(val)); load(); }
+    catch (err) { alert("Erro: " + err.message); }
+  };
+
+  window.removeMultiplier = async (type, id) => {
+    try { await upsertMultiplier(guildId, type, id, 0); load(); }
+    catch (err) { alert("Erro: " + err.message); }
+  };
 
   load();
 </script>
